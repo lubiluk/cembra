@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2016 Toyota Motor Corporation
+
 import controller_manager_msgs.srv
 import rospy
 import tmc_msgs.msg
@@ -7,6 +7,7 @@ import geometry_msgs.msg
 import tf2_ros
 import tf
 import math
+import sensor_msgs.msg
 
 MAX_VELOCITY = 1
 MAX_ROTATION = math.pi / 2
@@ -98,7 +99,8 @@ class MotionConstrainer:
         euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
         return euler[2]
 
-        
+def joint_state_callback(msg):
+    print(msg)
 
 def run():
     # initialize ROS publisher
@@ -106,7 +108,10 @@ def run():
                         tmc_msgs.msg.JointVelocity, queue_size=1)
     twist_pub = rospy.Publisher('/hsrb/command_velocity',
                         geometry_msgs.msg.Twist, queue_size=1)
-    # queue size of one will keep only the newest message
+    # rospy.Subscriber('/hsrb/joint_states', sensor_msgs.msg.JointState, joint_state_callback, queue_size=1)
+    # # queue size of one will keep only the newest message
+
+    # rospy.spin()
 
     # wait to establish connection between the controller
     while vel_pub.get_num_connections() == 0 or twist_pub.get_num_connections() == 0:
@@ -115,13 +120,13 @@ def run():
     from urdf_parser_py.urdf import URDF
     from pykdl_utils.kdl_kinematics import KDLKinematics
     robot = URDF.from_parameter_server()
-    kdl_kin = KDLKinematics(robot, 'base_footprint', 'hand_palm_link')
-    pose = kdl_kin.forward(q) # forward kinematics (returns homogeneous 4x4 numpy.mat)
-
-    print 'pose:', pose
+    kdl_kin = KDLKinematics(robot, 'base_footprint', 'hand_r_finger_tip_frame')
+    print(kdl_kin.get_joint_names())
 
     exit()
 
+    q = kdl_kin.random_joint_angles()
+    pose = kdl_kin.forward(q) # forward kinematics (returns homogeneous 4x4 numpy.mat)
 
     # Send messages with 100 hz rate
     rate = rospy.Rate(100)
