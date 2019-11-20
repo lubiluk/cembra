@@ -11,6 +11,27 @@ import math
 MAX_VELOCITY = 1
 MAX_ROTATION = math.pi / 2
 VEL = -1
+MIN_PALM_HEIGHT = 0.03
+MIN_GRIPPER_HEIGHT = 0.02
+
+GRIPPER_LINKS = [
+    'hand_l_distal_link',
+    'hand_l_finger_tip_frame',
+    'hand_l_finger_vacuum_frame',
+    'hand_l_mimic_distal_link',
+    'hand_l_proximal_link',
+    'hand_l_spring_proximal_link',
+    'hand_r_distal_link',
+    'hand_r_finger_tip_frame',
+    'hand_r_mimic_distal_link',
+    'hand_r_proximal_link',
+    'hand_r_spring_proximal_link',
+]
+
+PALM_LINKS = [
+    'hand_palm_link',
+    'hand_camera_frame'
+]
 
 rospy.init_node('random_motion')
 
@@ -51,6 +72,12 @@ class MotionConstrainer:
         self.initial_rotation = self.get_current_rotation()
 
     def constrain_joint_vel(self, joint_vel):
+        # for link in PALM_LINKS:
+        #     ts = self.buffer.lookup_transform('base_footprint', link, rospy.Time())
+            
+        #     if ts.transform.translation.z <= MIN_PALM_HEIGHT:
+
+
         return joint_vel
 
     def constrain_base_twist(self, base_twist):
@@ -84,6 +111,16 @@ def run():
     # wait to establish connection between the controller
     while vel_pub.get_num_connections() == 0 or twist_pub.get_num_connections() == 0:
         rospy.sleep(0.1)
+
+    from urdf_parser_py.urdf import URDF
+    from pykdl_utils.kdl_kinematics import KDLKinematics
+    robot = URDF.from_parameter_server()
+    kdl_kin = KDLKinematics(robot, 'base_footprint', 'hand_palm_link')
+    pose = kdl_kin.forward(q) # forward kinematics (returns homogeneous 4x4 numpy.mat)
+
+    print 'pose:', pose
+
+    exit()
 
 
     # Send messages with 100 hz rate
