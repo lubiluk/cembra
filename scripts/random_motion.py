@@ -8,12 +8,15 @@ import tf2_ros
 import tf
 import math
 import sensor_msgs.msg
+from urdf_parser_py.urdf import URDF
+from pykdl_utils.kdl_kinematics import KDLKinematics
 
 MAX_VELOCITY = 1
 MAX_ROTATION = math.pi / 2
 VEL = -1
-MIN_PALM_HEIGHT = 0.03
-MIN_GRIPPER_HEIGHT = 0.02
+MIN_PALM_HEIGHT = 0.06
+MIN_GRIPPER_HEIGHT = 0.06
+REFERENCE_FRAME = 'base_footprint'
 
 GRIPPER_LINKS = [
     'hand_l_distal_link',
@@ -49,10 +52,10 @@ class VelocityGenerator:
 
         joint_vel.velocity = [
             VEL,
-            VEL,
-            VEL,
-            VEL,
-            VEL
+            0,
+            0,
+            0,
+            0
         ]
         
         joint_vel.header.stamp = rospy.Time.now()
@@ -66,22 +69,41 @@ class VelocityGenerator:
 class MotionConstrainer:
     initial_rotation = None
     listener = None
+    joint_states = None
+    robot = None
 
     def __init__(self):
         self.buffer = tf2_ros.Buffer()
         self.listener = tf2_ros.TransformListener(self.buffer)
         self.initial_rotation = self.get_current_rotation()
+        self.robot = URDF.from_parameter_server()
 
-    def constrain_joint_vel(self, joint_vel):
-        # for link in PALM_LINKS:
-        #     ts = self.buffer.lookup_transform('base_footprint', link, rospy.Time())
+    def is_joint_vel_ok(self, joint_vel):
+        is_violating = True
+
+        for link in PALM_LINKS:
+            kinematics = KDLKinematics(self.robot, REFERENCE_FRAME, link)
+            angles = [self.joint_states.position[self.joint_states.name.index(name)] for name in kinematics.get_joint_names()]
+            pose = kinematics.forward(angles)
+            z = pose[2,3]
             
-        #     if ts.transform.translation.z <= MIN_PALM_HEIGHT:
+            if z <= MIN_PALM_HEIGHT:
+                print("Palm Cutout: {} ({})".format(link, z))
+                is_violating = False
 
+        for link in GRIPPER_LINKS:
+            kinematics = KDLKinematics(self.robot, REFERENCE_FRAME, link)
+            angles = [self.joint_states.position[self.joint_states.name.index(name)] for name in kinematics.get_joint_names()]
+            pose = kinematics.forward(angles)
+            z = pose[2,3]
+            
+            if z <= MIN_GRIPPER_HEIGHT:
+                print("Gripper Cutout: {} ({})".format(link, z))
+                is_violating = False
 
-        return joint_vel
+        return is_violating
 
-    def constrain_base_twist(self, base_twist):
+    def is_base_twist_ok(self, base_twist):
         c = math.pi
         x = self.initial_rotation
         y = self.get_current_rotation()
@@ -89,9 +111,10 @@ class MotionConstrainer:
         diff = c - abs(abs(x - y) % (2 * c) - c)
 
         if diff >= MAX_ROTATION:
-            base_twist.angular.z = 0
+            print("Base Cutout ({})".format(diff))
+            return False
 
-        return base_twist
+        return True
 
     def get_current_rotation(self):
         trans = self.buffer.lookup_transform('map', 'base_link', rospy.Time(), rospy.Duration(10))
@@ -99,49 +122,44 @@ class MotionConstrainer:
         euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
         return euler[2]
 
-def joint_state_callback(msg):
-    print(msg)
+    def update_joint_states(self, msg):
+        self.joint_states = msg
+        
 
 def run():
+    gen = VelocityGenerator()
+    con = MotionConstrainer()
+
+    def joint_state_callback(msg):
+        con.update_joint_states(msg)
+
     # initialize ROS publisher
     vel_pub = rospy.Publisher('/hsrb/pseudo_velocity_controller/ref_joint_velocity',
                         tmc_msgs.msg.JointVelocity, queue_size=1)
     twist_pub = rospy.Publisher('/hsrb/command_velocity',
                         geometry_msgs.msg.Twist, queue_size=1)
-    # rospy.Subscriber('/hsrb/joint_states', sensor_msgs.msg.JointState, joint_state_callback, queue_size=1)
-    # # queue size of one will keep only the newest message
-
-    # rospy.spin()
+    rospy.Subscriber('/hsrb/robot_state/joint_states', sensor_msgs.msg.JointState, joint_state_callback, queue_size=1)
+    # queue size of one will keep only the newest message
 
     # wait to establish connection between the controller
     while vel_pub.get_num_connections() == 0 or twist_pub.get_num_connections() == 0:
         rospy.sleep(0.1)
 
-    from urdf_parser_py.urdf import URDF
-    from pykdl_utils.kdl_kinematics import KDLKinematics
-    robot = URDF.from_parameter_server()
-    kdl_kin = KDLKinematics(robot, 'base_footprint', 'hand_r_finger_tip_frame')
-    print(kdl_kin.get_joint_names())
-
-    exit()
-
-    q = kdl_kin.random_joint_angles()
-    pose = kdl_kin.forward(q) # forward kinematics (returns homogeneous 4x4 numpy.mat)
-
     # Send messages with 100 hz rate
     rate = rospy.Rate(100)
-    gen = VelocityGenerator()
-    con = MotionConstrainer()
 
     while not rospy.is_shutdown():
         # fill ROS message
         (vel, twist) = gen.get_velocities()
-        con_vel = con.constrain_joint_vel(vel)
-        con_twist = con.constrain_base_twist(twist)
+        vel_ok = con.is_joint_vel_ok(vel)
+        twist_ok = con.is_base_twist_ok(twist)
 
         # publish ROS message
-        vel_pub.publish(con_vel)
-        twist_pub.publish(con_twist)
+        if vel_ok:
+            vel_pub.publish(vel)
+        
+        # if twist_ok:
+        #     twist_pub.publish(twist)
 
         # sleep
         rate.sleep()
