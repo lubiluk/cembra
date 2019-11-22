@@ -55,7 +55,7 @@ class VelocityValidator:
             v = joint_velocities.velocity[i]
             index = predicted_joint_states.name.index(n)
             # desired angular velocity assuming 1 second drift
-            predicted_joint_positions[index] += 0.02 if v >= 0 else -0.02
+            predicted_joint_positions[index] += v * 0.01
             predicted_joint_velocities[index] = v
 
         predicted_joint_states.position = tuple(predicted_joint_positions)
@@ -81,11 +81,10 @@ class VelocityValidator:
         return True
 
     def is_base_twist_ok(self, base_twist):
-        sign = 1 if base_twist.angular.z >= 0 else -1
         base = math.pi
         initial_rotation = self.initial_rotation
         current_rotation = self.get_current_rotation()
-        predicted_rotation = self.get_current_rotation() + sign * 0.5
+        predicted_rotation = self.get_current_rotation() + base_twist.angular.z * 0.01
 
         current_diff = base - abs(abs(initial_rotation - current_rotation) % (2 * base) - base)
         predicted_diff = base - abs(abs(initial_rotation - predicted_rotation) % (2 * base) - base)
