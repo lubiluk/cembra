@@ -11,7 +11,8 @@ import control_msgs.msg
 import controller_manager_msgs.srv
 import rospy
 import trajectory_msgs.msg
-
+import tf2_ros
+import tf
 
 rospy.init_node('random_motion')
         
@@ -55,13 +56,28 @@ def prepare_gripper():
     cli.wait_for_result()
 
 def run():
+    # setup gripper to desired position
     prepare_gripper()
 
+    # TF
+    buffer = tf2_ros.Buffer()
+    listener = tf2_ros.TransformListener(buffer)
+
+    # create generator and validator
     gen = VelocityGenerator()
     val = VelocityValidator()
 
     def joint_state_callback(msg):
-        val.update_joint_states(msg)
+        val.current_joint_states = msg
+
+    def get_current_rotation():
+        trans = buffer.lookup_transform('map', 'base_link', rospy.Time(), rospy.Duration(10))
+        quat = trans.transform.rotation
+        euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
+        return euler[2]
+
+    # stup reference rotation for rotation validation
+    val.reference_rotation = get_current_rotation()
 
     # initialize ROS publisher
     vel_pub = rospy.Publisher('/hsrb/pseudo_velocity_controller/ref_joint_velocity',
@@ -77,31 +93,34 @@ def run():
 
     # Send messages with 100 hz rate
     rate = rospy.Rate(100)
+
+    # generate velocities
     gen.regen_base_twist()
     gen.regen_arm_velocities()
 
     def timeout_callback(event):
+        print("regenerating velocities")
         gen.regen_arm_velocities()
         gen.regen_base_twist()
 
+    # change velocities periodically so it looks more interesting
     rospy.Timer(rospy.Duration(5), timeout_callback)
 
     while not rospy.is_shutdown():
-        # fill ROS message
+        val.current_rotation = get_current_rotation()
         (vel, twist) = gen.get_velocities()
-        vel_ok = val.is_joint_vel_ok(vel)
-        twist_ok = val.is_base_twist_ok(twist)
+        val.requested_velocities = vel
+        val.requested_twist = twist
 
         # publish ROS message
-        if vel_ok:
+        if val.velocities_ok:
             vel_pub.publish(vel)
         else:
             vel_pub.publish(gen.get_arm_stop_velocities())
             gen.regen_arm_velocities()
         
-        if twist_ok:
+        if val.twist_ok:
             twist_pub.publish(twist)
-            pass
         else:
             twist_pub.publish(gen.get_stop_base_twist())
             gen.regen_base_twist()
