@@ -15,7 +15,8 @@ import tf2_ros
 import tf
 
 rospy.init_node('random_motion')
-        
+
+
 def prepare_gripper():
     # initialize action client
     cli = actionlib.SimpleActionClient(
@@ -23,8 +24,10 @@ def prepare_gripper():
         control_msgs.msg.FollowJointTrajectoryAction)
 
     # wait for the action server to establish connection
+    print("Waiting for trajectory action")
     cli.wait_for_server()
 
+    print("Waiting for controller")
     # make sure the controller is running
     rospy.wait_for_service('/hsrb/controller_manager/list_controllers')
     list_controllers = rospy.ServiceProxy(
@@ -36,6 +39,8 @@ def prepare_gripper():
         for c in list_controllers().controller:
             if c.name == 'gripper_controller' and c.state == 'running':
                 running = True
+
+    print("Preparing gripper")
 
     # fill ROS message
     goal = control_msgs.msg.FollowJointTrajectoryGoal()
@@ -55,9 +60,10 @@ def prepare_gripper():
     # wait for the action server to complete the order
     cli.wait_for_result()
 
+
 def run():
     # setup gripper to desired position
-    prepare_gripper()
+    # prepare_gripper() # gripper is not available in simulation
 
     # TF
     buffer = tf2_ros.Buffer()
@@ -71,9 +77,11 @@ def run():
         val.current_joint_states = msg
 
     def get_current_rotation():
-        trans = buffer.lookup_transform('map', 'base_link', rospy.Time(), rospy.Duration(10))
+        trans = buffer.lookup_transform(
+            'map', 'base_link', rospy.Time(), rospy.Duration(10))
         quat = trans.transform.rotation
-        euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
+        euler = tf.transformations.euler_from_quaternion(
+            [quat.x, quat.y, quat.z, quat.w])
         return euler[2]
 
     # stup reference rotation for rotation validation
@@ -81,10 +89,11 @@ def run():
 
     # initialize ROS publisher
     vel_pub = rospy.Publisher('/hsrb/pseudo_velocity_controller/ref_joint_velocity',
-                        tmc_msgs.msg.JointVelocity, queue_size=1)
+                              tmc_msgs.msg.JointVelocity, queue_size=1)
     twist_pub = rospy.Publisher('/hsrb/command_velocity',
-                        geometry_msgs.msg.Twist, queue_size=1)
-    rospy.Subscriber('/hsrb/robot_state/joint_states', sensor_msgs.msg.JointState, joint_state_callback, queue_size=1)
+                                geometry_msgs.msg.Twist, queue_size=1)
+    rospy.Subscriber('/hsrb/robot_state/joint_states',
+                     sensor_msgs.msg.JointState, joint_state_callback, queue_size=1)
     # queue size of one will keep only the newest message
 
     # wait to establish connection between the controller
@@ -118,15 +127,16 @@ def run():
         else:
             vel_pub.publish(gen.get_arm_stop_velocities())
             gen.regen_arm_velocities()
-        
+
         if val.twist_ok:
             twist_pub.publish(twist)
         else:
             twist_pub.publish(gen.get_stop_base_twist())
             gen.regen_base_twist()
-        
+
         # sleep
         rate.sleep()
+
 
 if __name__ == '__main__':
     try:
