@@ -53,6 +53,7 @@
   <depend>rospy</depend>
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
+  <depend>tmc_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

@@ -71,10 +71,11 @@ def run():
 
     # create generator and validator
     gen = VelocityGenerator()
-    val = VelocityValidator()
+    # val = VelocityValidator()
 
     def joint_state_callback(msg):
-        val.current_joint_states = msg
+        pass
+        # val.current_joint_states = msg
 
     def get_current_rotation():
         trans = buffer.lookup_transform(
@@ -85,10 +86,10 @@ def run():
         return euler[2]
 
     # stup reference rotation for rotation validation
-    val.reference_rotation = get_current_rotation()
+    # val.reference_rotation = get_current_rotation()
 
     # initialize ROS publisher
-    vel_pub = rospy.Publisher('/hsrb/pseudo_velocity_controller/ref_joint_velocity',
+    vel_pub = rospy.Publisher('/cembra/velocity',
                               tmc_msgs.msg.JointVelocity, queue_size=1)
     twist_pub = rospy.Publisher('/hsrb/command_velocity',
                                 geometry_msgs.msg.Twist, queue_size=1)
@@ -116,23 +117,23 @@ def run():
     rospy.Timer(rospy.Duration(5), timeout_callback)
 
     while not rospy.is_shutdown():
-        val.current_rotation = get_current_rotation()
+        # val.current_rotation = get_current_rotation()
         (vel, twist) = gen.get_velocities()
-        val.requested_velocities = vel
-        val.requested_twist = twist
+        # val.requested_velocities = vel
+        # val.requested_twist = twist
 
         # publish ROS message
-        if val.velocities_ok:
-            vel_pub.publish(vel)
-        else:
-            vel_pub.publish(gen.get_arm_stop_velocities())
-            gen.regen_arm_velocities()
+        # if val.velocities_ok:
+        vel_pub.publish(vel)
+        # else:
+        #     vel_pub.publish(gen.get_arm_stop_velocities())
+        #     gen.regen_arm_velocities()
 
-        if val.twist_ok:
-            twist_pub.publish(twist)
-        else:
-            twist_pub.publish(gen.get_stop_base_twist())
-            gen.regen_base_twist()
+        # if val.twist_ok:
+        twist_pub.publish(twist)
+        # else:
+            # twist_pub.publish(gen.get_stop_base_twist())
+            # gen.regen_base_twist()
 
         # sleep
         rate.sleep()

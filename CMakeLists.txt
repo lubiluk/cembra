@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   roscpp
   std_msgs
+  tmc_msgs
   moveit_core
   moveit_ros_planning
   moveit_ros_planning_interface
@@ -69,11 +70,12 @@ find_package(catkin REQUIRED COMPONENTS
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+# Generate added messages and services with any dependencies listed here
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#  tmc_msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
