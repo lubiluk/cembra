@@ -41,6 +41,4 @@
   <!-- If database loading was enabled, start mongodb as well -->
   <include file="$(find hsrb_moveit_config)/launch/default_warehouse_db.launch" if="$(arg db)"/>
 
-  <node name="cembra_controller" pkg="cembra" type="cembra_controller"></node>
-
 </launch>
