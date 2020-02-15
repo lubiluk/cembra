@@ -35,36 +35,45 @@ bool isVelocitySafe(const tmc_msgs::JointVelocity &msg)
 
     robot_state::RobotState &current_state = scene->getCurrentStateNonConst();
 
-    for (int i = 0; i < msg.name.size(); ++i)
+    // Sample future positions
+    for (int j = 1; j <= 10; ++j)
     {
-        auto name = msg.name[i];
-        auto positions = current_state.getJointPositions(name);
-        auto vel = msg.velocity[i];
-        auto pos = positions[0];
+        for (int i = 0; i < msg.name.size(); ++i)
+        {
+            auto name = msg.name[i];
+            auto positions = current_state.getJointPositions(name);
+            auto vel = msg.velocity[i];
+            auto pos = positions[0];
 
-        pos += vel; // Assume 1 sec drift
+            pos += vel * 0.1 * j;
 
-        current_state.setJointPositions(name, &pos);
+            current_state.setJointPositions(name, &pos);
+        }
+
+        collision_result.clear();
+        collision_request.distance = true;
+        scene->checkCollision(collision_request, collision_result);
+
+        ROS_INFO("Collision distance %f", collision_result.distance);
+
+        auto isSafe = collision_result.distance >= 0.02;
+
+        if (!isSafe)
+        {
+            ROS_INFO_STREAM("Not safe");
+        }
+
+        if (collision_result.collision)
+        {
+            ROS_INFO("In collision %f", collision_result.distance);
+        }
+
+        if (!isSafe) {
+            return false;
+        }
     }
 
-    collision_result.clear();
-    collision_request.distance = true;
-    scene->checkCollision(collision_request, collision_result);
-
-    ROS_INFO("Collision distance %f", collision_result.distance);
-
-    auto isSafe = collision_result.distance >= 0.02;
-
-    if (!isSafe)
-    {
-        ROS_INFO_STREAM("Not safe");
-    }
-
-    if (collision_result.collision) {
-        ROS_INFO("In collision %f", collision_result.distance);
-    }
-
-    return isSafe;
+    return true;
 }
 
 void insertGroundPlane()
@@ -74,7 +83,7 @@ void insertGroundPlane()
 
     shape_msgs::SolidPrimitive shape;
     shape.type = shape_msgs::SolidPrimitive::BOX;
-    shape.dimensions = {10.0 , 10.0, 1.0};
+    shape.dimensions = {10.0, 10.0, 1.0};
 
     geometry_msgs::Pose pose;
     pose.position.z = -0.5;
