@@ -56,6 +56,10 @@
   <depend>tmc_msgs</depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>	
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
