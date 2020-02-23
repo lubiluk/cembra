@@ -5,6 +5,10 @@ from sensor_msgs.msg import Image
 from cembra.srv import Action, ActionResponse
 from tmc_msgs.msg import JointVelocity
 from geometry_msgs.msg import Twist
+import trajectory_msgs.msg
+import actionlib
+import control_msgs.msg
+import controller_manager_msgs.srv
 
 CAMERA_TOPIC = '/hsrb/head_rgbd_sensor/rgb/image_rect_color'
 VELOCITY_TOPIC = '/cembra/velocity'
@@ -60,8 +64,67 @@ def action_to_velocity(action):
         2: FAST
     }[action]
 
+def prepare_head():
+    # initialize action client
+    cli = actionlib.SimpleActionClient(
+        '/hsrb/head_trajectory_controller/follow_joint_trajectory',
+        control_msgs.msg.FollowJointTrajectoryAction)
+
+    # wait for the action server to establish connection
+    cli.wait_for_server()
+
+    # fill ROS message
+    goal = control_msgs.msg.FollowJointTrajectoryGoal()
+    traj = trajectory_msgs.msg.JointTrajectory()
+    traj.joint_names = ["head_pan_joint", "head_tilt_joint"]
+    p = trajectory_msgs.msg.JointTrajectoryPoint()
+    p.positions = [0., -0.7]
+    p.velocities = [0, 0]
+    p.time_from_start = rospy.Time(3)
+    traj.points = [p]
+    goal.trajectory = traj
+
+    # send message to the action server
+    cli.send_goal(goal)
+
+    # wait for the action server to complete the order
+    cli.wait_for_result()
+    
+def prepare_gripper():
+    # initialize action client
+    cli = actionlib.SimpleActionClient(
+        '/hsrb/gripper_controller/follow_joint_trajectory',
+        control_msgs.msg.FollowJointTrajectoryAction)
+
+    # wait for the action server to establish connection
+    cli.wait_for_server()
+
+    # fill ROS message
+    goal = control_msgs.msg.FollowJointTrajectoryGoal()
+    traj = trajectory_msgs.msg.JointTrajectory()
+    traj.joint_names = ["hand_motor_joint"]
+    p = trajectory_msgs.msg.JointTrajectoryPoint()
+    p.positions = [0.0]
+    p.velocities = [0]
+    p.effort = [0.1]
+    p.time_from_start = rospy.Time(3)
+    traj.points = [p]
+    goal.trajectory = traj
+
+    # send message to the action server
+    cli.send_goal(goal)
+
+    # wait for the action server to complete the order
+    cli.wait_for_result()
+
 def run():
+    global vel_pub
+    global twist_pub
+
     rospy.init_node('mdp')
+
+    prepare_head()
+    prepare_gripper()
 
     # initialize ROS publisher
     # queue size of one will keep only the newest message

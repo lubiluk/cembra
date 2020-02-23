@@ -8,8 +8,8 @@
 const double MAX_ROTATION = M_PI / 2;
 
 ros::Publisher pub;
-tf2_ros::Buffer tfBuffer;
-tf2_ros::TransformListener tfListener(tfBuffer);
+tf2_ros::Buffer *tfBuffer;
+tf2_ros::TransformListener *tfListener;
 
 double reference_rotation;
 double current_rotation;
@@ -21,7 +21,7 @@ double getCurrentRotation()
     geometry_msgs::TransformStamped trans;
 
     try{
-      trans = tfBuffer.lookupTransform("map", "base_link", ros::Time(0), ros::Duration(10));
+      trans = tfBuffer->lookupTransform("map", "base_link", ros::Time(0), ros::Duration(10));
     }
     catch (tf2::TransformException &ex) {
       ROS_WARN("%s",ex.what());
@@ -71,6 +71,9 @@ void twistCallback(const geometry_msgs::Twist &msg)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_filter");
+
+    tfBuffer = new tf2_ros::Buffer();
+    tfListener = new tf2_ros::TransformListener(*tfBuffer);
 
     // Setup reference rotation
     reference_rotation = getCurrentRotation();

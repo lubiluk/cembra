@@ -56,9 +56,9 @@ bool isVelocitySafe(const tmc_msgs::JointVelocity &msg)
 
         ROS_INFO("Collision distance %f", collision_result.distance);
 
-        auto isSafe = collision_result.distance >= 0.02;
+        auto is_safe = collision_result.distance >= 0.02;
 
-        if (!isSafe)
+        if (!is_safe)
         {
             ROS_INFO_STREAM("Not safe");
         }
@@ -68,7 +68,7 @@ bool isVelocitySafe(const tmc_msgs::JointVelocity &msg)
             ROS_INFO("In collision %f", collision_result.distance);
         }
 
-        if (!isSafe) {
+        if (!is_safe) {
             return false;
         }
     }
