@@ -1,3 +1,4 @@
-uint64[6] action
+int32[6] action
 ---
-float64 reward
+sensor_msgs/Image state
+float32 reward

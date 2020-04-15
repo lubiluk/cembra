@@ -103,7 +103,7 @@ void insertGroundPlane()
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "filter");
+    ros::init(argc, argv, "arm_filter");
 
     // Setup MoveIt
     ros::AsyncSpinner spinner(1);

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+SERVICE = '/cembra/action'
+
 import rospy
 from cembra.srv import Action, ActionResponse
 
@@ -7,16 +9,16 @@ def take_action():
     try:
         action = (1, 1, 1, 1, 1, 1)
 
-        perform_action = rospy.ServiceProxy('action', Action)
+        perform_action = rospy.ServiceProxy(SERVICE, Action)
         response = perform_action(action)
 
         return response.reward
     except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
+        rospy.logerr("Service call failed: {}".format(e))
 
 def run():
     rospy.init_node('learner_0')
-    rospy.wait_for_service('action')
+    rospy.wait_for_service(SERVICE)
 
     # Taking action takes at least 0.02 of a second
     # so max rate is 50 hz

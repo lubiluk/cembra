@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_geometry_msgs
   tf
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -79,6 +80,7 @@ generate_messages(
  DEPENDENCIES
  std_msgs
  tmc_msgs
+ sensor_msgs
 )
 
 ################################################
@@ -142,7 +144,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/cembra_node.cpp)
-add_executable(filter src/filter.cpp)
+add_executable(arm_filter src/arm_filter.cpp)
 add_executable(base_filter src/base_filter.cpp)
 
 ## Rename C++ executable without prefix
@@ -154,14 +156,14 @@ add_executable(base_filter src/base_filter.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(arm_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(base_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(filter ${catkin_LIBRARIES})
+target_link_libraries(arm_filter ${catkin_LIBRARIES})
 target_link_libraries(base_filter ${catkin_LIBRARIES})
 
 #############
