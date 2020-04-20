@@ -1,20 +1,34 @@
 #!/usr/bin/env python
 
-import rospy
-import sensor_msgs.msg
-from cembra.srv import Action, ActionResponse
-from tmc_msgs.msg import JointVelocity
-from geometry_msgs.msg import Twist
+import random
+
 import control_msgs.msg
 import controller_manager_msgs.srv
+import rospy
+import sensor_msgs.msg
+from geometry_msgs.msg import Twist
 from PIL import Image
+from tmc_msgs.msg import JointVelocity
+from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import SetModelState
+
+from cembra.srv import Action, ActionResponse
 from prep import prepare_gripper, prepare_head
+import math as m
 
 CAMERA_TOPIC = '/hsrb/head_rgbd_sensor/rgb/image_rect_color'
 VELOCITY_TOPIC = '/cembra/velocity'
 TWIST_TOPIC = '/cembra/twist'
 SLOW = 0.1
 STOP = 0.0
+CUBE_Z = -0.001001
+CAN_Z = -0.02621
+MIN_ROBOT_DISTANCE = 0.5
+MAX_ROBOT_DISTANCE = 0.9
+MIN_ROBOT_ANGLE = -m.pi / 2
+MAX_ROBOT_ANGLE = m.pi / 2
+CAN_DISTANCE = 0.15
+MIN_CUBE_CAN_DISTANCE = 0.1
 
 vel_pub = None
 twist_pub = None
@@ -66,6 +80,76 @@ def handle_twist_action(action):
 
 def action_to_velocity(action):
     return action * SLOW
+
+def reset():
+    # Choose location of the first can
+    r1 = random.uniform(MIN_ROBOT_DISTANCE, MAX_ROBOT_DISTANCE)
+    theta1 = random.uniform(MIN_ROBOT_ANGLE, MAX_ROBOT_ANGLE)
+    x1 = r1 * m.cos(theta1)
+    y1 = r1 * m.sin(theta1)
+
+    # Choose location of the second can
+    ok = False
+    while not ok:
+        thetac = random.uniform(0, 2 * m.pi)
+        xc = CAN_DISTANCE * m.cos(thetac)
+        yc = CAN_DISTANCE * m.sin(thetac)
+
+        x2 = x1 + xc
+        y2 = y1 + yc
+        r2 = m.sqrt(x2**2 + y2**2)
+        theta2 = m.atan(y2 / x2)
+
+        ok = MIN_ROBOT_ANGLE < theta2 < MAX_ROBOT_ANGLE and MIN_ROBOT_DISTANCE < r2 < MAX_ROBOT_DISTANCE
+
+    # Choose location of the cube
+    ok = False
+    while not ok:
+        r3 = random.uniform(MIN_ROBOT_DISTANCE, MAX_ROBOT_DISTANCE)
+        theta3 = random.uniform(MIN_ROBOT_ANGLE, MAX_ROBOT_ANGLE)
+        x3 = r3 * m.cos(theta3)
+        y3 = r3 * m.sin(theta3)
+
+        distance1 = m.sqrt((x1 - x3)**2 + (y1 - y3)**2)
+        distance2 = m.sqrt((x2 - x3)**2 + (y2 - y3)**2)
+
+        ok =  distance1 > MIN_CUBE_CAN_DISTANCE and distance2 > MIN_CUBE_CAN_DISTANCE
+
+    # Set object positions
+    try:
+        # Set coke_can1 state
+        state = ModelState()
+        state.pose.position.x = x1
+        state.pose.position.y = y1
+        state.reference_frame = "world"
+        state.model_name = "coke_can1"
+
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        response = perform_action(state)
+
+        # Set coke_can2 state
+        state = ModelState()
+        state.pose.position.x = x2
+        state.pose.position.y = y2
+        state.reference_frame = "world"
+        state.model_name = "coke_can2"
+
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        response = perform_action(state)
+
+        # Set cube state
+        state = ModelState()
+        state.pose.position.x = x3
+        state.pose.position.y = y3
+        state.reference_frame = "world"
+        state.model_name = "cube"
+
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        response = perform_action(state)
+    except rospy.ServiceException, e:
+        rospy.logerr("Service call failed: {}".format(e))
+
+    rospy.sleep(5)
 
 def run():
     global vel_pub

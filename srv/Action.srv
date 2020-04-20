@@ -2,3 +2,4 @@ int32[6] action
 ---
 sensor_msgs/Image state
 float32 reward
+int32 isdone
