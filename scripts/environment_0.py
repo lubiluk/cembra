@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
+import math as m
 import random
 
 import control_msgs.msg
 import controller_manager_msgs.srv
+import gazebo_msgs.msg
+import gazebo_msgs.srv
+import geometry_msgs.msg
 import rospy
 import sensor_msgs.msg
-from geometry_msgs.msg import Twist
+import tmc_msgs.msg
 from PIL import Image
-from tmc_msgs.msg import JointVelocity
-from gazebo_msgs.msg import ModelState
-from gazebo_msgs.srv import SetModelState
 
-from cembra.srv import Action, ActionResponse
+import cembra.srv
 from prep import prepare_gripper, prepare_head
-import math as m
 
 CAMERA_TOPIC = '/hsrb/head_rgbd_sensor/rgb/image_rect_color'
 VELOCITY_TOPIC = '/cembra/velocity'
@@ -37,6 +37,7 @@ def get_image():
     msg = rospy.wait_for_message(CAMERA_TOPIC, sensor_msgs.msg.Image)
     img = Image.frombytes('RGB', (msg.width, msg.height), msg.data)
     img.save('camera.jpg')
+    
     return msg
 
 def handle_action(msg):
@@ -50,16 +51,17 @@ def handle_action(msg):
 
     img = get_image()
 
-    response = ActionResponse()
+    response = cembra.srv.ActionResponse()
     response.state = img
     response.reward = 0
+    response.isdone = 0
 
     return response
 
 def handle_velocity_actions(actions):
     assert(len(actions) == 5)
 
-    msg = JointVelocity()
+    msg = tmc_msgs.msg.JointVelocity()
     msg.name = [
             'arm_flex_joint',
             'arm_lift_joint',
@@ -73,7 +75,7 @@ def handle_velocity_actions(actions):
     vel_pub.publish(msg)
 
 def handle_twist_action(action):
-    msg = Twist()
+    msg = geometry_msgs.msg.Twist()
     msg.angular.z = action_to_velocity(action)
     
     twist_pub.publish(msg)
@@ -81,7 +83,7 @@ def handle_twist_action(action):
 def action_to_velocity(action):
     return action * SLOW
 
-def reset():
+def handle_reset(action):
     # Choose location of the first can
     r1 = random.uniform(MIN_ROBOT_DISTANCE, MAX_ROBOT_DISTANCE)
     theta1 = random.uniform(MIN_ROBOT_ANGLE, MAX_ROBOT_ANGLE)
@@ -118,38 +120,47 @@ def reset():
     # Set object positions
     try:
         # Set coke_can1 state
-        state = ModelState()
+        state = gazebo_msgs.msg.ModelState()
         state.pose.position.x = x1
         state.pose.position.y = y1
         state.reference_frame = "world"
         state.model_name = "coke_can1"
 
-        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', gazebo_msgs.srv.SetModelState)
         response = perform_action(state)
 
         # Set coke_can2 state
-        state = ModelState()
+        state = gazebo_msgs.msg.ModelState()
         state.pose.position.x = x2
         state.pose.position.y = y2
         state.reference_frame = "world"
         state.model_name = "coke_can2"
 
-        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', gazebo_msgs.srv.SetModelState)
         response = perform_action(state)
 
         # Set cube state
-        state = ModelState()
+        state = gazebo_msgs.msg.ModelState()
         state.pose.position.x = x3
         state.pose.position.y = y3
         state.reference_frame = "world"
         state.model_name = "cube"
 
-        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', gazebo_msgs.srv.SetModelState)
         response = perform_action(state)
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: {}".format(e))
 
-    rospy.sleep(5)
+    rospy.sleep(1)
+
+    img = get_image()
+
+    response = cembra.srv.ResetResponse()
+    response.state = img
+    response.reward = 0
+    response.isdone = 0
+
+    return response
 
 def run():
     global vel_pub
@@ -162,15 +173,16 @@ def run():
 
     # initialize ROS publisher
     # queue size of one will keep only the newest message
-    vel_pub = rospy.Publisher(VELOCITY_TOPIC, JointVelocity, queue_size=1)
-    twist_pub = rospy.Publisher(TWIST_TOPIC, Twist, queue_size=1)
+    vel_pub = rospy.Publisher(VELOCITY_TOPIC, tmc_msgs.msg.JointVelocity, queue_size=1)
+    twist_pub = rospy.Publisher(TWIST_TOPIC, geometry_msgs.msg.Twist, queue_size=1)
 
     rospy.loginfo("Waiting for filters to attach")
     # wait to establish connection between the controller
     while vel_pub.get_num_connections() == 0 or twist_pub.get_num_connections() == 0:
         rospy.sleep(0.1)
 
-    s = rospy.Service('/cembra/action', Action, handle_action)
+    sr = rospy.Service('/cembra/reset', cembra.srv.Reset, handle_reset)
+    sa = rospy.Service('/cembra/action', cembra.srv.Action, handle_action)
     rospy.loginfo("Environment ready")
     rospy.spin()
 
