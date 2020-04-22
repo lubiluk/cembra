@@ -34,30 +34,28 @@ class Environment1:
 
     def handle_reset(self, _):
         utils.move_to_start_pose()
-
-        # Choose random, reachable location of the cube
-        r = random.uniform(config.MIN_ROBOT_DISTANCE, config.MAX_ROBOT_DISTANCE)
-        theta = random.uniform(config.MIN_ROBOT_ANGLE, config.MAX_ROBOT_ANGLE)
-        x = r * m.cos(theta)
-        y = r * m.sin(theta)
-        
-        utils.set_model_position('cube', x, y)
-
-        h = config.CAMERA_HEIGHT
-        tilt = m.atan(r / h) - 1.57
-
-        utils.move_head(theta, tilt)
-
+        self.distribute_objects()
+        rospy.sleep(2)
         goal = utils.get_image()
-
-        utils.move_head_to_start_pose()
-
+        self.distribute_objects()
+        rospy.sleep(2)
         state = utils.get_image()
+
+        return (goal, state)
 
 
     def handle_action(self):
         pass
 
+    def distribute_objects(self):
+        for i in range(1, 3):
+            # Choose random, reachable location of the cube
+            r = random.uniform(config.MIN_ROBOT_DISTANCE, config.MAX_ROBOT_DISTANCE)
+            theta = random.uniform(config.MIN_ROBOT_ANGLE, config.MAX_ROBOT_ANGLE)
+            x = r * m.cos(theta)
+            y = r * m.sin(theta)
+            
+            utils.set_model_position('cube' + str(i), x, y)
 
 def run():
     env = Environment1()

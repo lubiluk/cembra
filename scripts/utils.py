@@ -100,8 +100,8 @@ def move_head(pan, tilt):
 
 def get_image():
     msg = rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
-    # img = Image.frombytes('RGB', (msg.width, msg.height), msg.data)
-    # img.save('camera.jpg')
+    img = Image.frombytes('RGB', (msg.width, msg.height), msg.data)
+    img.save('camera.jpg')
 
     return msg
 
