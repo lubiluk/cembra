@@ -34,6 +34,7 @@ class Environment1:
 
     def handle_reset(self, _):
         utils.move_to_start_pose()
+        utils.set_model_position('hsrb', 0, 0, 0)
         self.distribute_objects()
         rospy.sleep(2)
         goal = utils.get_image()
@@ -55,7 +56,7 @@ class Environment1:
             x = r * m.cos(theta)
             y = r * m.sin(theta)
             
-            utils.set_model_position('cube' + str(i), x, y)
+            utils.set_model_position('cube' + str(i), x, y, 0)
 
 def run():
     env = Environment1()

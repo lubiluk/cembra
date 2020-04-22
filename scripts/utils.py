@@ -6,7 +6,9 @@ import sensor_msgs.msg
 import trajectory_msgs.msg
 import gazebo_msgs.msg
 import gazebo_msgs.srv
+import geometry_msgs.msg
 from PIL import Image
+from tf.transformations import quaternion_from_euler
 
 import config
 
@@ -105,13 +107,16 @@ def get_image():
 
     return msg
 
-def set_model_position(model_name, x, y):
+def set_model_position(model_name, x, y, yaw):
+    q = quaternion_from_euler(0, 0, yaw)
+
     # Set object positions
     try:
         # Set coke_can1 state
         state = gazebo_msgs.msg.ModelState()
         state.pose.position.x = x
         state.pose.position.y = y
+        state.pose.orientation = geometry_msgs.msg.Quaternion(q[0], q[1], q[2], q[3])
         state.reference_frame = "world"
         state.model_name = model_name
 
