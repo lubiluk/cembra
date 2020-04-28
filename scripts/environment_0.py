@@ -54,7 +54,7 @@ def handle_action(msg):
     response = cembra.srv.ActionResponse()
     response.state = img
     response.reward = 0
-    response.isdone = 0
+    response.is_done = 0
 
     return response
 

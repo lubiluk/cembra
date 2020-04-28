@@ -1,8 +1,9 @@
 
 import math as m
 
-VELOCITY_TOPIC = '/cembra/velocity'
-TWIST_TOPIC = '/cembra/twist'
+FILTERED_VELOCITY_TOPIC = '/cembra/velocity'
+FILTERED_TWIST_TOPIC = '/cembra/twist'
+UNFILTERED_TWIST_TOPIC = '/hsrb/command_velocity'
 RESET_SERVICE = '/cembra/reset'
 ACTION_SERVICE = '/cembra/action'
 SLOW = 0.1

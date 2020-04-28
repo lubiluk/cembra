@@ -19,7 +19,7 @@ void velocityCallback(const tmc_msgs::JointVelocity &msg)
     if (isVelocitySafe(msg))
     {
         pub.publish(msg);
-        ROS_INFO("Safe velocity");
+        // ROS_INFO("Safe velocity");
         return;
     }
 
@@ -54,19 +54,19 @@ bool isVelocitySafe(const tmc_msgs::JointVelocity &msg)
         collision_request.distance = true;
         scene->checkCollision(collision_request, collision_result);
 
-        ROS_INFO("Collision distance %f", collision_result.distance);
+        // ROS_INFO("Collision distance %f", collision_result.distance);
 
         auto is_safe = collision_result.distance >= 0.02;
 
-        if (!is_safe)
-        {
-            ROS_INFO_STREAM("Not safe");
-        }
+        // if (!is_safe)
+        // {
+        //     ROS_INFO_STREAM("Not safe");
+        // }
 
-        if (collision_result.collision)
-        {
-            ROS_INFO("In collision %f", collision_result.distance);
-        }
+        // if (collision_result.collision)
+        // {
+        //     ROS_INFO("In collision %f", collision_result.distance);
+        // }
 
         if (!is_safe) {
             return false;

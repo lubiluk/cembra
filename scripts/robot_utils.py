@@ -1,21 +1,21 @@
 
 import actionlib
 import control_msgs.msg
+import gazebo_msgs.msg
+import gazebo_msgs.srv
 import rospy
 import sensor_msgs.msg
 import trajectory_msgs.msg
-import gazebo_msgs.msg
-import gazebo_msgs.srv
-import geometry_msgs.msg
-from PIL import Image
-from tf.transformations import quaternion_from_euler
 
 import config
 
+
 def move_to_start_pose():
+    # Move head out of the way
+    move_head(0, 0)
+    move_arm_to_start_pose()
     move_gripper_to_start_pose()
     move_head_to_start_pose()
-    move_arm_to_start_pose()
 
 
 def move_arm_to_start_pose():
@@ -86,11 +86,11 @@ def move_head(pan, tilt):
     # fill ROS message
     goal = control_msgs.msg.FollowJointTrajectoryGoal()
     traj = trajectory_msgs.msg.JointTrajectory()
-    traj.joint_names = ["head_pan_joint", "head_tilt_joint"]
+    traj.joint_names = ['head_pan_joint', 'head_tilt_joint']
     p = trajectory_msgs.msg.JointTrajectoryPoint()
     p.positions = [pan, tilt]
     p.velocities = [0, 0]
-    p.time_from_start = rospy.Time(3)
+    p.time_from_start = rospy.Time(2)
     traj.points = [p]
     goal.trajectory = traj
 
@@ -101,27 +101,4 @@ def move_head(pan, tilt):
     cli.wait_for_result()
 
 def get_image():
-    msg = rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
-    img = Image.frombytes('RGB', (msg.width, msg.height), msg.data)
-    img.save('camera.jpg')
-
-    return msg
-
-def set_model_position(model_name, x, y, yaw):
-    q = quaternion_from_euler(0, 0, yaw)
-
-    # Set object positions
-    try:
-        # Set coke_can1 state
-        state = gazebo_msgs.msg.ModelState()
-        state.pose.position.x = x
-        state.pose.position.y = y
-        state.pose.orientation = geometry_msgs.msg.Quaternion(q[0], q[1], q[2], q[3])
-        state.reference_frame = "world"
-        state.model_name = model_name
-
-        perform_action = rospy.ServiceProxy('/gazebo/set_model_state', gazebo_msgs.srv.SetModelState)
-        response = perform_action(state)
-    except rospy.ServiceException, e:
-        rospy.logerr("Service call failed: {}".format(e))
-        
+    return rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)

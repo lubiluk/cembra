@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber sub = n.subscribe("/cembra/twist", 1, twistCallback);
     ROS_INFO("Ready to filter twist.");
-    ros::waitForShutdown();
+    ros::spin();
 
     return 0;
 }
