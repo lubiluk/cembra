@@ -32,6 +32,9 @@ class Environment1:
 
         self.reset_srv = rospy.Service(config.RESET_SERVICE, cembra.srv.Reset, self.handle_reset)
         self.action_srv = rospy.Service(config.ACTION_SERVICE, cembra.srv.Action, self.handle_action)
+        
+        simulator_utils.go_turbo()
+
         rospy.loginfo("Environment ready")
 
         rospy.spin()

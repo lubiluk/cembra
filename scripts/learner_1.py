@@ -36,9 +36,9 @@ class Learner1:
             try:
                 bridge = CvBridge()
                 img = bridge.imgmsg_to_cv2(goal, "bgr8")
-                cv2.imwrite("goal.png", img)
+                cv2.imwrite("tmp/goal.png", img)
                 img = bridge.imgmsg_to_cv2(state, "bgr8")
-                cv2.imwrite("state.png", img)
+                cv2.imwrite("tmp/state.png", img)
             except CvBridgeError as cv_bridge_exception:
                 rospy.logerr(cv_bridge_exception)
 

@@ -1,5 +1,6 @@
 
 import gazebo_msgs.srv
+import gazebo_msgs.msg
 import geometry_msgs.msg
 import rospy
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -52,5 +53,22 @@ def resume():
     try:
         service = rospy.ServiceProxy('/gazebo/unpause_physics', std_srvs.srv.Empty)
         service()
+    except rospy.ServiceException, e:
+        rospy.logerr("Service call failed: {}".format(e))
+
+def get_physics_properties():
+    try:
+        service = rospy.ServiceProxy('/gazebo/get_physics_properties', gazebo_msgs.srv.GetPhysicsProperties)
+        return  service()
+    except rospy.ServiceException, e:
+        rospy.logerr("Service call failed: {}".format(e))
+
+def go_turbo():
+    try:
+        props = get_physics_properties()
+        props.max_update_rate = 0
+
+        service = rospy.ServiceProxy('/gazebo/set_physics_properties', gazebo_msgs.srv.SetPhysicsProperties)
+        service(props.time_step, props.max_update_rate, props.gravity, props.ode_config)
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: {}".format(e))
