@@ -21,7 +21,7 @@ class Environment1:
         rospy.loginfo("Environment 1")
 
     def start(self):
-        self.vel_pub = rospy.Publisher(config.FILTERED_VELOCITY_TOPIC, tmc_msgs.msg.JointVelocity, queue_size=1)
+        self.vel_pub = rospy.Publisher(config.UNFILTERED_VELOCITY_TOPIC, tmc_msgs.msg.JointVelocity, queue_size=1)
         self.twist_pub = rospy.Publisher(config.UNFILTERED_TWIST_TOPIC, geometry_msgs.msg.Twist, queue_size=1)
 
         rospy.loginfo("Waiting for filters to attach")

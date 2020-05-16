@@ -4,7 +4,7 @@
   <arg name="db" default="false" />
 
   <!-- By default, we start rviz -->
-  <arg name="use_gui" default="true" />
+  <arg name="use_gui" default="false" />
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />

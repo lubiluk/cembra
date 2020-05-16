@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <launch>
-    <include file="$(find cembra)/launch/simulator.launch"></include>
-    <include file="$(find cembra)/launch/moveit.launch"></include>
-    <node name="arm_filter" pkg="cembra" type="arm_filter"></node>
-    <node name="base_filter" pkg="cembra" type="base_filter"></node>
-    <!-- <node name="environment" pkg="cembra" type="environment.py"></node> -->
+    <include file="$(find hsrb_gazebo_launch)/launch/hsrb_empty_world.launch">
+        <arg name="paused" default="false" />
+    </include>
+    <!-- <include file="$(find cembra)/launch/moveit.launch"></include> -->
+    <!-- <node name="arm_filter" pkg="cembra" type="arm_filter"></node> -->
+    <!-- <node name="base_filter" pkg="cembra" type="base_filter"></node> -->
+    <!-- <node name="environment" pkg="cembra" type="environment_1.py"></node> -->
 
     <node name="spawn_cube1" pkg="gazebo_ros" type="spawn_model" args="-database wood_cube_5cm -sdf -x 1 -y -0.5 -z 0 -model cube1" />
     <node name="spawn_cube2" pkg="gazebo_ros" type="spawn_model" args="-database wood_cube_7_5cm -sdf -x 1 -y 0.5 -z 0 -model cube2" />
