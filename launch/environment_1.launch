@@ -1,7 +1,21 @@
 <?xml version="1.0"?>
 <launch>
     <include file="$(find hsrb_gazebo_launch)/launch/hsrb_empty_world.launch">
+        <!-- <arg name="namespace" default="/hsrb"/> -->
+        <arg name="debug" default="false"/>
+        <!-- <arg name="gui" default="true" /> -->
+        <arg name="rviz" default="true"/>
+        <!-- <arg name="gazebo_visualization" default="false" /> -->
+        <arg name="use_manipulation" default="false" />
+        <arg name="use_navigation" default="false" />
+        <arg name="use_perception" default="false" />
+        <arg name="use_task" default="false" />
+        <arg name="use_teleop" default="true" />
+        <arg name="use_web" default="false" />
+        <arg name="use_laser_odom" default="false" />
         <arg name="paused" default="false" />
+        <arg name="fast_physics" default="true" />
+        <!-- <arg name="robot_name" default="$(optenv ROBOT_NAME hsrb)" /> -->
     </include>
     <!-- <include file="$(find cembra)/launch/moveit.launch"></include> -->
     <!-- <node name="arm_filter" pkg="cembra" type="arm_filter"></node> -->
