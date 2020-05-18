@@ -101,4 +101,8 @@ def move_head(pan, tilt):
     cli.wait_for_result()
 
 def get_image():
+    # Drain outdated frames for a bit
+    for i in range(10):
+        rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
+
     return rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
