@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from cv_bridge import CvBridge, CvBridgeError
 from tqdm import trange
+from itertools import product
 
 import cembra.srv
 import td
@@ -19,7 +20,6 @@ from dqn_agent import DQNAgent
 from observation_processor import ObservationProcessor
 from replay_buffer import ReplayBuffer
 from frame_buffer import FrameBuffer
-
 
 class Learner1:
     def __init__(self):
@@ -35,15 +35,17 @@ class Learner1:
         self.observation_processor = ObservationProcessor()
         self.frame_buffer = FrameBuffer(640, 480, 4)
 
+        # Create action conversion talbe
+        self.possible_actions = list(product(range(-1,2), repeat=6))
+        self.n_actions = len(self.possible_actions)
+
 
     def start(self):
         state_shape = self.frame_buffer.obs_shape
-        n_actions = 6
-
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        agent = DQNAgent(state_shape, n_actions, epsilon=1).to(device)
-        target_network = DQNAgent(state_shape, n_actions).to(device)
+        agent = DQNAgent(state_shape, self.n_actions, epsilon=1).to(device)
+        target_network = DQNAgent(state_shape, self.n_actions).to(device)
         target_network.load_state_dict(agent.state_dict())
 
         timesteps_per_epoch = 1
@@ -71,14 +73,16 @@ class Learner1:
 
         (goal, state) = self.reset_env()
 
-        plt.figure(figsize=[12,10])
-        plt.title("State")
-        plt.imshow(state[0, :, :], cmap='gray')
-        plt.show()
+        plt.figure(figsize=[12, 18])
 
-        plt.figure(figsize=[12,10])
+        plt.subplot(2, 1, 1)
         plt.title("Goal")
         plt.imshow(goal[0, :, :], cmap='gray')
+
+        plt.subplot(2, 1, 2)
+        plt.title("State")
+        plt.imshow(state[0, :, :], cmap='gray')
+
         plt.show()
 
         for step in trange(total_steps + 1):
@@ -162,8 +166,8 @@ class Learner1:
 
         return (goal, state)
 
-    def take_action(self, action):
-        actions = self.action_to_actions(action)
+    def take_action(self, action_index):
+        actions = self.possible_actions[action_index]
         response = self.action_proxy(actions)
         state = self.observation_processor.process(response.state)
         state = self.frame_buffer.update(state)
@@ -213,9 +217,6 @@ class Learner1:
             rewards.append(reward)
         return np.mean(rewards)
 
-    def action_to_actions(self, action):
-        """ Convert action to array of actions for each joint"""
-        return (0, 0, 0, 0, 0, 0)
 
 if __name__ == '__main__':
     try:
