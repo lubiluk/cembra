@@ -4,7 +4,7 @@
         <!-- <arg name="namespace" default="/hsrb"/> -->
         <arg name="debug" default="false"/>
         <!-- <arg name="gui" default="true" /> -->
-        <arg name="rviz" default="true"/>
+        <arg name="rviz" default="false"/>
         <!-- <arg name="gazebo_visualization" default="false" /> -->
         <arg name="use_manipulation" default="false" />
         <arg name="use_navigation" default="false" />
@@ -14,10 +14,12 @@
         <arg name="use_web" default="false" />
         <arg name="use_laser_odom" default="false" />
         <arg name="paused" default="false" />
-        <arg name="fast_physics" default="true" />
+        <arg name="fast_physics" default="false" />
         <!-- <arg name="robot_name" default="$(optenv ROBOT_NAME hsrb)" /> -->
     </include>
+
     <!-- <include file="$(find cembra)/launch/moveit.launch"></include> -->
+
     <!-- <node name="arm_filter" pkg="cembra" type="arm_filter"></node> -->
     <!-- <node name="base_filter" pkg="cembra" type="base_filter"></node> -->
     <!-- <node name="environment" pkg="cembra" type="environment_1.py"></node> -->
