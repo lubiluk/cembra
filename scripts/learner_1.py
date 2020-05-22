@@ -21,6 +21,7 @@ from observation_processor import ObservationProcessor
 from replay_buffer import ReplayBuffer
 from frame_buffer import FrameBuffer
 
+
 class Learner1:
     def __init__(self):
         rospy.init_node("learner_1")
@@ -168,7 +169,9 @@ class Learner1:
 
     def take_action(self, action_index):
         actions = self.possible_actions[action_index]
+
         response = self.action_proxy(actions)
+
         state = self.observation_processor.process(response.state)
         state = self.frame_buffer.update(state)
 
@@ -191,7 +194,9 @@ class Learner1:
         for _ in range(n_steps):
             qvalues = agent.get_qvalues([s])
             action = agent.sample_actions(qvalues)[0]
+
             next_s, r, done = self.take_action(action)
+            
             exp_replay.add(s, action, r, next_s, done)
             s = next_s
 

@@ -100,9 +100,10 @@ def move_head(pan, tilt):
     # wait for the action server to complete the order
     cli.wait_for_result()
 
-def get_image():
-    # Drain outdated frames for a bit
-    for i in range(10):
-        rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
+def get_image(drain=False):
+    if drain:
+        # Drain outdated frames for a bit
+        for i in range(10):
+            rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)
 
     return rospy.wait_for_message('/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image)

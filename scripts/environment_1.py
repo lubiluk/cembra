@@ -47,12 +47,12 @@ class Environment1:
         rospy.sleep(2)
         self.save_goal_positions()
         # simulator_utils.resume()
-        goal = robot_utils.get_image()
+        goal = robot_utils.get_image(drain=True)
         # simulator_utils.pause()
         self.distribute_objects()
         # simulator_utils.resume()
         rospy.sleep(2)
-        state = robot_utils.get_image()
+        state = robot_utils.get_image(drain=True)
         # simulator_utils.resume()
 
         return (goal, state)
@@ -88,9 +88,11 @@ class Environment1:
         
         self.twist_pub.publish(msg)
 
-        rospy.sleep(0.02)
+        # sleep is not necessary, as collectina image takes time
+        # rospy.sleep(0.02)
 
         state = robot_utils.get_image()
+
         reward = 1 if self.is_goal_reached() else 0
         is_done = reward
 

@@ -19,9 +19,9 @@ class DQNAgent(nn.Module):
             nn.Conv2d(32, 64, 3, stride=2),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(298304, 256),
+            nn.Linear(298304, 1000),
             nn.ReLU(),
-            nn.Linear(256, n_actions)
+            nn.Linear(1000, n_actions)
         )
 
     def forward(self, state_t):
