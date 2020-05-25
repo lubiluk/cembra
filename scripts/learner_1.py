@@ -74,17 +74,20 @@ class Learner1:
 
         (goal, state) = self.reset_env()
 
-        plt.figure(figsize=[12, 18])
+        plot = rospy.get_param("plot", False)
 
-        plt.subplot(2, 1, 1)
-        plt.title("Goal")
-        plt.imshow(goal[0, :, :], cmap='gray')
+        if plot:
+            plt.figure(figsize=[12, 18])
 
-        plt.subplot(2, 1, 2)
-        plt.title("State")
-        plt.imshow(state[0, :, :], cmap='gray')
+            plt.subplot(2, 1, 1)
+            plt.title("Goal")
+            plt.imshow(goal[0, :, :], cmap='gray')
 
-        plt.show()
+            plt.subplot(2, 1, 2)
+            plt.title("State")
+            plt.imshow(state[0, :, :], cmap='gray')
+
+            plt.show(block=False)
 
         for step in trange(total_steps + 1):
             if not training_utils.is_enough_ram():
@@ -130,30 +133,31 @@ class Learner1:
                 print("buffer size = %i, epsilon = %.5f" %
                     (len(exp_replay), agent.epsilon))
 
-                plt.figure(figsize=[16, 9])
+                if plot:
+                    plt.figure(figsize=[16, 9])
 
-                plt.subplot(2, 2, 1)
-                plt.title("Mean reward per life")
-                plt.plot(mean_rw_history)
-                plt.grid()
+                    plt.subplot(2, 2, 1)
+                    plt.title("Mean reward per life")
+                    plt.plot(mean_rw_history)
+                    plt.grid()
 
-                assert not np.isnan(td_loss_history[-1])
-                plt.subplot(2, 2, 2)
-                plt.title("TD loss history (smoothened)")
-                plt.plot(training_utils.smoothen(td_loss_history))
-                plt.grid()
+                    assert not np.isnan(td_loss_history[-1])
+                    plt.subplot(2, 2, 2)
+                    plt.title("TD loss history (smoothened)")
+                    plt.plot(training_utils.smoothen(td_loss_history))
+                    plt.grid()
 
-                plt.subplot(2, 2, 3)
-                plt.title("Initial state V")
-                plt.plot(initial_state_v_history)
-                plt.grid()
+                    plt.subplot(2, 2, 3)
+                    plt.title("Initial state V")
+                    plt.plot(initial_state_v_history)
+                    plt.grid()
 
-                plt.subplot(2, 2, 4)
-                plt.title("Grad norm history (smoothened)")
-                plt.plot(training_utils.smoothen(grad_norm_history))
-                plt.grid()
+                    plt.subplot(2, 2, 4)
+                    plt.title("Grad norm history (smoothened)")
+                    plt.plot(training_utils.smoothen(grad_norm_history))
+                    plt.grid()
 
-                plt.show()
+                    plt.show(block=False)
 
 
         return
