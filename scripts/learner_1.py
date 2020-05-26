@@ -35,6 +35,7 @@ class Learner1:
 
         self.observation_processor = ObservationProcessor()
         self.frame_buffer = FrameBuffer(640, 480, 4)
+        self.goal = None
 
         # Create action conversion talbe
         self.possible_actions = list(product(range(-1,2), repeat=6))
@@ -42,7 +43,7 @@ class Learner1:
 
 
     def start(self):
-        state_shape = self.frame_buffer.obs_shape
+        state_shape = self.get_state_shape()
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         agent = DQNAgent(state_shape, self.n_actions, epsilon=1).to(device)
@@ -72,7 +73,7 @@ class Learner1:
 
         exp_replay = ReplayBuffer(10**5)
 
-        (goal, state) = self.reset_env()
+        state = self.reset_env()
 
         plot = rospy.get_param("plot", False)
 
@@ -81,7 +82,7 @@ class Learner1:
 
             plt.subplot(2, 1, 1)
             plt.title("Goal")
-            plt.imshow(goal[0, :, :], cmap='gray')
+            plt.imshow(state[4, :, :], cmap='gray')
 
             plt.subplot(2, 1, 2)
             plt.title("State")
@@ -125,7 +126,7 @@ class Learner1:
             if step % eval_freq == 0:
                 mean_rw_history.append(self.evaluate(agent, n_games=3, greedy=True))
                 initial_state_q_values = agent.get_qvalues(
-                    [self.reset_env()[1]]
+                    [self.reset_env()]
                 )
                 initial_state_v_history.append(np.max(initial_state_q_values))
 
@@ -164,12 +165,15 @@ class Learner1:
 
     def reset_env(self):
         response = self.reset_proxy()
-        goal = self.observation_processor.process(response.goal)
+        self.goal = self.observation_processor.process(response.goal)
         state = self.observation_processor.process(response.state)
-        self.frame_buffer.reset()
-        state = self.frame_buffer.update(state)
 
-        return (goal, state)
+        self.frame_buffer.reset()
+
+        state = self.frame_buffer.update(state)
+        state = np.append(state, self.goal, axis=0)
+
+        return state
 
     def take_action(self, action_index):
         actions = self.possible_actions[action_index]
@@ -178,8 +182,15 @@ class Learner1:
 
         state = self.observation_processor.process(response.state)
         state = self.frame_buffer.update(state)
+        state = np.append(state, self.goal, axis=0)
 
         return (state, response.reward, response.is_done)
+
+    def get_state_shape(self):
+        shape = self.frame_buffer.obs_shape
+        shape[0] += 1
+
+        return shape
 
     def play_and_record(self, initial_state, agent, exp_replay, n_steps=1):
         """
@@ -205,7 +216,7 @@ class Learner1:
             s = next_s
 
             if done:
-                _, s = self.reset_env()
+                s = self.reset_env()
 
         return sum_rewards, s
 
@@ -213,7 +224,7 @@ class Learner1:
         """ Plays n_games full games. If greedy, picks actions as argmax(qvalues). Returns mean reward. """
         rewards = []
         for _ in range(n_games):
-            _, s = self.reset_env()
+            s = self.reset_env()
             reward = 0
             for _ in range(t_max):
                 qvalues = agent.get_qvalues([s])
