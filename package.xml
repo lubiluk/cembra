@@ -61,10 +61,11 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>tf</depend>
   <depend>sensor_msgs</depend>
+  <depend>gezebo_ros</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+    <gazebo_ros plugin_path="${prefix}/lib" gazebo_model_path="${prefix}/models" gazebo_media_path="${prefix}/models"/>
   </export>
 </package>

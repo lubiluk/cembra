@@ -5,6 +5,8 @@
     <arg name="recording" default="false"/>
     <arg name="gui" default="true"/>
 
+    <env name="GAZEBO_MODEL_PATH" value="$(find cembra)/models"/>
+
     <include file="$(find hsrb_gazebo_launch)/launch/hsrb_empty_world.launch">
         <!-- <arg name="namespace" default="/hsrb"/> -->
         <arg name="debug" value="false"/>
@@ -24,16 +26,13 @@
         <!-- <arg name="robot_name" default="$(optenv ROBOT_NAME hsrb)" /> -->
     </include>
 
-    <!-- <include file="$(find cembra)/launch/moveit.launch"></include> -->
-
-    <!-- <node name="arm_filter" pkg="cembra" type="arm_filter"></node> -->
-    <!-- <node name="base_filter" pkg="cembra" type="base_filter"></node> -->
-
+    <node name="floor" pkg="gazebo_ros" type="spawn_model" args="-database floor -sdf -x 0 -y 0 -z 0.0001 -model floor" />
+    <node name="arena" pkg="gazebo_ros" type="spawn_model" args="-database arena -sdf -x 1 -y 0 -z 0.0002 -model arena" />
     <node name="spawn_cube1" pkg="gazebo_ros" type="spawn_model" args="-database wood_cube_5cm -sdf -x 1 -y -0.5 -z 0 -model cube1" />
     <node name="spawn_cube2" pkg="gazebo_ros" type="spawn_model" args="-database wood_cube_7_5cm -sdf -x 1 -y 0.5 -z 0 -model cube2" />
     
-    <node name="environment" pkg="cembra" type="environment_1.py"></node>
+    <!-- <node name="environment" pkg="cembra" type="environment_1.py"></node> -->
     
-    <param name="plot" type="bool" value="$(arg plot)"/>
-    <node name="learner" pkg="cembra" type="learner_1.py" if="$(arg learner)"></node>
+    <!-- <param name="plot" type="bool" value="$(arg plot)"/> -->
+    <!-- <node name="learner" pkg="cembra" type="learner_1.py" if="$(arg learner)"></node> -->
 </launch>

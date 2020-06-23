@@ -1,0 +1,15 @@
+material Arena/Image
+{
+    technique
+    {
+        pass
+        {
+            scene_blend alpha_blend
+
+            texture_unit
+            {
+                texture arena.png
+            }
+        }
+    }
+}
