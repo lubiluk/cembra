@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.4">
-<model name="arena">
+<model name="workspace">
   <static>true</static>
     <link name="link">
       <collision name="collision">
@@ -29,9 +29,9 @@
         </geometry>
         <material>
           <script>
-            <uri>model://arena/materials/scripts</uri>
-            <uri>model://arena/materials/textures</uri>
-            <name>Arena/Image</name>
+            <uri>model://workspace/materials/scripts</uri>
+            <uri>model://workspace/materials/textures</uri>
+            <name>Workspace/Image</name>
           </script>
         </material>
       </visual>

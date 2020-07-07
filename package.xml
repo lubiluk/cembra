@@ -62,6 +62,7 @@
   <depend>tf</depend>
   <depend>sensor_msgs</depend>
   <depend>gezebo_ros</depend>
+  <depend>gazebo_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

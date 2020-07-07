@@ -93,7 +93,7 @@ class Environment1:
 
         state = robot_utils.get_image()
 
-        reward = 1 if self.is_goal_reached() else 0
+        reward = 1 if self.is_goal_reached() else -0.01
         is_done = reward
 
         return (state, reward, is_done)

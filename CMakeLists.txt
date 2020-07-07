@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   tf
   sensor_msgs
+  gazebo_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -67,6 +68,8 @@ add_service_files(
   FILES
   Action.srv
   Reset.srv
+  ActionEnv2.srv
+  ResetEnv2.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -82,6 +85,7 @@ generate_messages(
  std_msgs
  tmc_msgs
  sensor_msgs
+ gazebo_msgs
 )
 
 ################################################
