@@ -4,6 +4,13 @@
     <arg name="plot" default="false"/>  
     <arg name="recording" default="false"/>
     <arg name="rviz" default="false"/>
+    <!-- <arg name="use_manipulation" value="false" /> -->
+    <arg name="use_navigation" value="false" />
+    <arg name="use_perception" value="false" />
+    <arg name="use_task" value="false" />
+    <arg name="use_teleop" value="true" />
+    <arg name="use_web" value="false" />
+    <arg name="use_laser_odom" value="false" />
 
     <env name="GAZEBO_MODEL_PATH" value="$(find cembra)/models"/>
 
@@ -15,10 +22,10 @@
         <arg name="use_laser_odom" value="false" />
     </include>
 
+    
+    <!-- <node name="environment" pkg="cembra" type="environment_2.py"></node> -->
+    
 <!--
-    
-    <node name="environment" pkg="cembra" type="environment_2.py"></node>
-    
     <param name="plot" type="bool" value="$(arg plot)"/>
     <node name="learner" pkg="cembra" type="learner_2.py" if="$(arg learner)"></node> -->
 </launch>

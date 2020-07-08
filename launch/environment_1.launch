@@ -14,7 +14,7 @@
         <!-- <arg name="recording" value="$(arg recording)" /> -->
         <arg name="rviz" value="false"/>
         <!-- <arg name="gazebo_visualization" default="false" /> -->
-        <arg name="use_manipulation" value="false" />
+        <!-- <arg name="use_manipulation" value="false" /> -->
         <arg name="use_navigation" value="false" />
         <arg name="use_perception" value="false" />
         <arg name="use_task" value="false" />

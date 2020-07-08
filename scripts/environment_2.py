@@ -28,9 +28,9 @@ class Environment2:
         self._image = None
 
     def start(self):
-        self.base_pub = rospy.Publisher(
-            config.UNFILTERED_VELOCITY_TOPIC, tmc_msgs.msg.JointVelocity, queue_size=1)
         self.arm_pub = rospy.Publisher(
+            config.UNFILTERED_VELOCITY_TOPIC, tmc_msgs.msg.JointVelocity, queue_size=1)
+        self.base_pub = rospy.Publisher(
             config.UNFILTERED_TWIST_TOPIC, geometry_msgs.msg.Twist, queue_size=1)
         self.collision_sub = rospy.Subscriber(
             '/cube_contact_sensor_state', gazebo_msgs.msg.ContactsState, self._handle_collision)
@@ -68,18 +68,18 @@ class Environment2:
         - 3 for base
         """
         actions = msg.action
-        assert(len(actions) == 6)
+        assert(len(actions) == 8)
 
         # Arm velocities
-        msg = trajectory_msgs.msg.JointTrajectory()
-        msg.joint_names = [
+        msg = tmc_msgs.msg.JointVelocity()
+        msg.name = [
                 'arm_flex_joint',
                 'arm_lift_joint',
                 'arm_roll_joint',
                 'wrist_flex_joint',
                 'wrist_roll_joint'
                 ]
-        msg.velocity = [a * config.SLOW for a in actions[:5]]
+        msg.velocity = [a * 1 for a in actions[:5]]
         msg.header.stamp = rospy.Time.now()
 
         self.arm_pub.publish(msg)
