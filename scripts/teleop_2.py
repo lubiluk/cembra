@@ -3,6 +3,7 @@
 import rospy
 import cembra.srv
 import config
+from pynput import keyboard
 
 class Teleop2:
     def __init__(self):
@@ -18,10 +19,25 @@ class Teleop2:
         self.actions = [1, 1, 1, 1, 1, 1, 1, 1]
 
     def start(self):
-        self.reset_proxy()
+        # self.reset_proxy()
+
+        listener = keyboard.Listener(
+            on_press=self.on_press)
+        listener.start()
     
         while not rospy.is_shutdown():
-            self.action_proxy(self.actions)
+            passd
+
+        listener.stop()
+
+    def on_press(self, key):
+        try:
+            print('alphanumeric key {0} pressed'.format(
+                key.char))
+        except AttributeError:
+            print('special key {0} pressed'.format(
+                key))
+
 
 
 if __name__ == '__main__':

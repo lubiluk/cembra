@@ -79,7 +79,7 @@ class Environment2:
                 'wrist_flex_joint',
                 'wrist_roll_joint'
                 ]
-        msg.velocity = [a * 1 for a in actions[:5]]
+        msg.velocity = [a * config.SLOW for a in actions[:5]]
         msg.header.stamp = rospy.Time.now()
 
         self.arm_pub.publish(msg)
