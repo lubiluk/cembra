@@ -6,8 +6,8 @@ import config
 from pynput import keyboard
 
 KEY_MAP = {
-    'q': (0, -1),
-    'a': (0, 1),
+    'q': (0, 1),
+    'a': (0, -1),
     'w': (1, 1),
     's': (1, -1),
     'e': (2, 1),
@@ -35,26 +35,39 @@ class Teleop2:
         self.reset_proxy = rospy.ServiceProxy(config.RESET_SERVICE, cembra.srv.ResetEnv2)
         self.action_proxy = rospy.ServiceProxy(config.ACTION_SERVICE, cembra.srv.ActionEnv2)
 
-        self.actions = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.pressed_keys = set()
 
     def start(self):
         self.reset_proxy()
 
         listener = keyboard.Listener(
-            on_press=self.on_press)
+            on_press=self.on_press,
+            on_release=self.on_release)
         listener.start()
     
         while not rospy.is_shutdown():
-            self.action_proxy(self.actions)
-            self.actions = [0, 0, 0, 0, 0, 0, 0, 0]
+            actions = [0, 0, 0, 0, 0, 0, 0, 0]
+
+            for k in self.pressed_keys:
+                mapping = KEY_MAP[k]
+                actions[mapping[0]] = mapping[1]
+
+
+            rospy.loginfo(actions)
+            result = self.action_proxy(actions)
+
+            if result.is_done:
+                break
 
         listener.stop()
 
     def on_press(self, key):
-        a = KEY_MAP[key.char]
+        if key.char in KEY_MAP.keys():
+            self.pressed_keys.add(key.char)
 
-        if a is not None:
-            self.actions[a[0]] = a[1]
+    def on_release(self, key):
+        if key.char in self.pressed_keys:
+            self.pressed_keys.remove(key.char)
 
 
 

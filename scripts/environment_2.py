@@ -86,8 +86,8 @@ class Environment2:
 
         # Base velocity
         msg = geometry_msgs.msg.Twist()
-        msg.angular.x = actions[5] * config.SLOW
-        msg.angular.y = actions[6] * config.SLOW
+        msg.linear.x = actions[5] * config.SLOW
+        msg.linear.y = actions[6] * config.SLOW
         msg.angular.z = actions[7] * config.SLOW
         
         self.base_pub.publish(msg)
