@@ -57,6 +57,7 @@ class Environment2:
     def _handle_reset(self, msg):
         robot_utils.move_to_start_pose()
         simulator_utils.set_model_position('hsrb', 0, 0, 0)
+        self._collision_registered = False
 
         return self._image
 

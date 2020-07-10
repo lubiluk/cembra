@@ -4,6 +4,11 @@ import rospy
 import cembra.srv
 import config
 from pynput import keyboard
+import sys
+import h5py
+import uuid
+import numpy as np
+from ros_numpy import numpify
 
 KEY_MAP = {
     'q': (0, 1),
@@ -38,7 +43,28 @@ class Teleop2:
         self.pressed_keys = set()
 
     def start(self):
-        self.reset_proxy()
+        stop = False
+
+        while not stop:
+            self.play_and_record()
+
+            answer = raw_input("Repeat? [Y/n]")
+
+            if answer == 'n':
+                stop = True
+
+
+    def play_and_record(self):
+        states = np.zeros((10000, 480, 640, 3), dtype='uint8')
+        actions = np.zeros((10000, 8), dtype='i')
+        rewards = np.zeros((10000, 1), dtype='f')
+        is_dones = np.zeros((10000, 1), dtype='?')
+        step = 0
+
+        result = self.reset_proxy()
+        state = numpify(result.state)
+
+        rospy.loginfo("Start!")
 
         listener = keyboard.Listener(
             on_press=self.on_press,
@@ -46,24 +72,42 @@ class Teleop2:
         listener.start()
     
         while not rospy.is_shutdown():
-            actions = [0, 0, 0, 0, 0, 0, 0, 0]
+            action = [0, 0, 0, 0, 0, 0, 0, 0]
 
             for k in self.pressed_keys:
                 mapping = KEY_MAP[k]
-                actions[mapping[0]] = mapping[1]
+                action[mapping[0]] = mapping[1]
 
 
-            rospy.loginfo(actions)
-            result = self.action_proxy(actions)
+            # rospy.loginfo(actions)
+            result = self.action_proxy(action)
+            states[step] = state
+            actions[step] = action
+            rewards[step] = result.reward
+            is_dones[step] = result.is_done
+
+            step += 1
+            state = numpify(result.state)
 
             if result.is_done:
+                rospy.loginfo("Success!")
                 break
 
         listener.stop()
 
+        path = "/tmp/{}.hdf5".format(uuid.uuid4())
+
+        with h5py.File(path, 'w') as f:
+            f.create_dataset("states", data=states[:step])
+            f.create_dataset("actions", data=actions[:step])
+            f.create_dataset("rewards", data=rewards[:step])
+            f.create_dataset("is_dones", data=is_dones[:step])
+
     def on_press(self, key):
         if key.char in KEY_MAP.keys():
             self.pressed_keys.add(key.char)
+        
+        sys.stdout.write('\b')
 
     def on_release(self, key):
         if key.char in self.pressed_keys:
