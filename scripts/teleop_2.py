@@ -9,6 +9,7 @@ import h5py
 import uuid
 import numpy as np
 from ros_numpy import numpify
+from frame_buffer import FrameBuffer
 
 KEY_MAP = {
     'q': (0, 1),
@@ -94,6 +95,7 @@ class Teleop2:
                 break
 
         listener.stop()
+        self.pressed_keys = set()
 
         path = "/tmp/{}.hdf5".format(uuid.uuid4())
 

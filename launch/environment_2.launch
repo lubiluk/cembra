@@ -17,13 +17,13 @@
     <arg name="robot_name" default="$(optenv ROBOT_NAME hsrb)" />
     <include file="$(find hsrb_gazebo_launch)/launch/include/hsrb_gazebo_common.xml" pass_all_args="true" >
         <!-- <arg name="map" value="[Path to the map which you made]" /> -->
-        <arg name="world_name" value="$(find cembra)/worlds/environment2.world" />>
+        <arg name="world_name" value="$(find cembra)/worlds/environment_2.world" />>
         <!-- <arg name="robot_pos" value="[Initial pose of the robot]" /> -->
         <arg name="use_laser_odom" value="false" />
     </include>
 
     
-    <!-- <node name="environment" pkg="cembra" type="environment_2.py"></node> -->
+    <node name="environment" pkg="cembra" type="environment_2.py"></node>
     
 <!--
     <param name="plot" type="bool" value="$(arg plot)"/>
