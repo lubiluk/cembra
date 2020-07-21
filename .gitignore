@@ -3,7 +3,7 @@ tmp
 
 .env
 
-data
+data/*
 
 # Created by https://www.gitignore.io/api/c++,ros,linux,python,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=c++,ros,linux,python,visualstudiocode

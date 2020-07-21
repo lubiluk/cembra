@@ -184,7 +184,7 @@ class Learner1:
         return (state, response.reward, response.is_done)
 
     def preload_exp(self, exp_replay):
-        files = glob.glob("/home/lubiluk/Documents/episodes_environment_2/*.hdf5")
+        files = glob.glob("data/episodes_environment_2/*.hdf5")
 
         for f in files:
             with h5py.File(f, 'r') as f:
