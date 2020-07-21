@@ -97,7 +97,7 @@ class Teleop2:
         listener.stop()
         self.pressed_keys = set()
 
-        path = "/tmp/{}.hdf5".format(uuid.uuid4())
+        path = "data/episodes_environment_2/{}.hdf5".format(uuid.uuid4())
 
         with h5py.File(path, 'w') as f:
             f.create_dataset("states", data=states[:step])
