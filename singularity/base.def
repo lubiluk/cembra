@@ -14,9 +14,6 @@ From: ubuntu:16.04
   echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list
   wget https://hsr-user:jD3k4G2e@packages.hsr.io/tmc.key -O - | apt-key add -
   wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - 
-  curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-  install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/
-  sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
   echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
   apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
@@ -27,10 +24,7 @@ From: ubuntu:16.04
   apt install -y ros-kinetic-hsrb-moveit
   apt install -y python-catkin-tools
   apt install -y vim
-  apt install -y code
   apt install -y python-pip
-
-  pip install h5py pynput torch tqdm numpy pylint matplotlib Pillow scipy pandas sympy
 
   rosdep init
   rosdep update
@@ -62,7 +56,7 @@ rviz.bin $&' > /opt/ros/kinetic/bin/rviz
   echo "To run GAZEBO in client-server configuration please use as GAZEBO_MASTER_URI adress http://$ROS_IP:11345"
 
 %labels
-  Author: Maciej Czuchry [m.czuchry@cyfronet.pl]
+  Author: Maciej Czuchry [m.czuchry@cyfronet.pl], Paweł Gajewski [pgajewski@agh.edu.pl]
   Version 1.2
 
 %help

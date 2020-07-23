@@ -1,0 +1,16 @@
+Bootstrap: localimage
+From: base.sif
+
+%post
+  wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
+  apt install -y ./code.deb
+
+%runscript
+  eval "$@"
+
+%labels
+  Author:  Paweł Gajewski [pgajewski@agh.edu.pl]
+  Version 1.2
+
+%help
+  This file configures base image for python libriaries   
