@@ -25,6 +25,12 @@ From: ubuntu:16.04
   apt install -y python-catkin-tools
   apt install -y vim
   apt install -y python-pip
+  apt install -y ros-kinetic-ros-numpy
+
+  pip install --upgrade pip
+  pip install future h5py pynput torch tqdm numpy pylint matplotlib Pillow scipy pandas sympy
+  wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
+  apt install -y ./code.deb
 
   rosdep init
   rosdep update
