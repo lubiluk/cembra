@@ -10,4 +10,6 @@ class ObservationProcessor:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = gray.reshape((1, 480, 640))
 
+        # cv2.imwrite('image.png', img) 
+
         return gray
