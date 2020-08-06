@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import math as m
 import random
+import time
 
 import geometry_msgs
 import numpy as np
@@ -25,6 +26,7 @@ class Environment2:
         rospy.loginfo("Environment 2")
 
         self._collision_registered = False
+        self._image = None
 
     def start(self):
         self.arm_pub = rospy.Publisher(
@@ -33,6 +35,8 @@ class Environment2:
             config.UNFILTERED_TWIST_TOPIC, geometry_msgs.msg.Twist, queue_size=1)
         self.collision_sub = rospy.Subscriber(
             '/cube_contact_sensor_state', gazebo_msgs.msg.ContactsState, self._handle_collision)
+        self.image_sub = rospy.Subscriber(
+            '/hsrb/head_rgbd_sensor/rgb/image_rect_color', sensor_msgs.msg.Image, self._handle_image)
 
         rospy.loginfo("Waiting for controllers to attach")
         # wait to establish connection between the controller
@@ -57,9 +61,9 @@ class Environment2:
         simulator_utils.set_model_position('wood_cube_5cm', 0.7, 0, 0)
         self._collision_registered = False
 
-        image = robot_utils.get_image(drain=True)
+        rospy.sleep(0.1)
 
-        return image
+        return self._image
 
     def _handle_action(self, msg):
         """
@@ -72,7 +76,7 @@ class Environment2:
         
         self._send_velocities(actions)
 
-        state = robot_utils.get_image()
+        rospy.sleep(0.1)
 
         reward = 1 if self._collision_registered else -0.01
         is_done = self._collision_registered
@@ -80,7 +84,7 @@ class Environment2:
         if is_done:
             self._send_velocities([0, 0, 0, 0, 0, 0, 0, 0])
 
-        return (state, reward, is_done)
+        return (self._image, reward, is_done)
 
     def _send_velocities(self, actions):
         assert(len(actions) == 8)
@@ -107,12 +111,13 @@ class Environment2:
         
         self.base_pub.publish(msg)
 
-        rospy.loginfo("sent velocities")
-
     def _handle_collision(self, msg):
         for s in msg.states:
             if s.collision2_name.startswith('hsrb::hand') or s.collision2_name.startswith('hsrb::wrist'):
                 self._collision_registered = True
+
+    def _handle_image(self, msg):
+        self._image = msg
 
 def run():
     env = Environment2()

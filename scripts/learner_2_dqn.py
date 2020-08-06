@@ -75,7 +75,7 @@ class Learner1:
         grad_norm_history = []
         initial_state_v_history = []
 
-        exp_replay = ReplayBuffer(10**5)
+        exp_replay = ReplayBuffer(700)
 
         self.preload_exp(exp_replay)
 
@@ -203,7 +203,9 @@ class Learner1:
                     next_state = self.observation_processor.process(ns)
                     next_state = self.frame_buffer.update(next_state) 
 
-                    exp_replay.add(state, a, r, next_state, d)
+                    action = self.possible_actions.index(tuple(a))
+
+                    exp_replay.add(state, action, r, next_state, d)
 
         
 

@@ -70,6 +70,8 @@ add_service_files(
   Reset.srv
   ActionEnv2.srv
   ResetEnv2.srv
+  Action3.srv
+  Reset3.srv
 )
 
 ## Generate actions in the 'action' folder
