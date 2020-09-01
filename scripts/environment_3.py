@@ -85,9 +85,10 @@ class Environment3:
         simulator_utils.resume()
         self._send_velocities(velocities)
         rospy.sleep(TIME_STEP)
+        d = simulator_utils.get_link_distance('hsrb::wrist_ft_sensor_frame', 'wood_cube_5cm::link')
         simulator_utils.pause()
 
-        reward = 1 if self._collision_registered else -0.01
+        reward = 100 if self._collision_registered else -d
         is_done = self._collision_registered
 
         if is_done:

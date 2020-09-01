@@ -15,9 +15,9 @@ class BigReplayBuffer():
 
         self._obs_t = self._f.create_dataset("obs_t", (size,) + obs_size, dtype='i')
         self._action = self._f.create_dataset("action", (size,) + action_size, dtype='f')
-        self._reward = self._f.create_dataset("reward", (size,), dtype='f')
+        self._reward = self._f.create_dataset("reward", (size, 1), dtype='f')
         self._obs_tp1 = self._f.create_dataset("obs_tp1", (size,) + obs_size, dtype='i')
-        self._done = self._f.create_dataset("done", (size,), dtype='i')
+        self._done = self._f.create_dataset("done", (size, 1), dtype='i')
 
         self._maxsize = size
         self._next_idx = 0

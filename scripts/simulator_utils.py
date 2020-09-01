@@ -5,7 +5,7 @@ import geometry_msgs.msg
 import rospy
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import std_srvs.srv
-
+import math as m
 
 def set_model_position(model_name, x, y, yaw):
     q = quaternion_from_euler(0, 0, yaw)
@@ -24,23 +24,46 @@ def set_model_position(model_name, x, y, yaw):
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: {}".format(e))
 
-def get_model_position(model):
+def get_model_state(model):
     try:
         service = rospy.ServiceProxy('/gazebo/get_model_state', gazebo_msgs.srv.GetModelState)
-        response = service(model, 'link')
+        response = service(model, 'world')
 
-        q = (
-            response.pose.orientation.x,
-            response.pose.orientation.y,
-            response.pose.orientation.z,
-            response.pose.orientation.w)
-        p = response.pose.position
-        e = euler_from_quaternion(q)
-
-        return (p.x, p.y, e[2])
+        return response
     except rospy.ServiceException, e:
         rospy.logerr("Service call failed: {}".format(e))
         return None
+
+def get_model_position(model):
+    response = get_model_state(model)
+
+    q = (
+        response.pose.orientation.x,
+        response.pose.orientation.y,
+        response.pose.orientation.z,
+        response.pose.orientation.w)
+    p = response.pose.position
+    e = euler_from_quaternion(q)
+
+    return (p.x, p.y, e[2])
+
+def get_link_state(link):
+    try:
+        service = rospy.ServiceProxy('/gazebo/get_link_state', gazebo_msgs.srv.GetLinkState)
+        response = service(link, 'world')
+
+        return response.link_state
+    except rospy.ServiceException, e:
+        rospy.logerr("Service call failed: {}".format(e))
+        return None
+
+def get_link_distance(link1, link2):
+    state1 = get_link_state(link1)
+    state2 = get_link_state(link2)
+
+    return m.sqrt((state2.pose.position.x - state1.pose.position.x)**2 + 
+        (state2.pose.position.y - state1.pose.position.y)**2 +
+        (state2.pose.position.z - state1.pose.position.z)**2)
 
 def pause():
     try:
