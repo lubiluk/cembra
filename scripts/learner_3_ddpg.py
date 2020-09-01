@@ -108,11 +108,18 @@ class Learner3:
         self._lower_bound = 0.0
         self._upper_bound = 1.0
 
+        self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         self._ou_noise = OUActionNoise(mean=np.zeros(1), std_deviation=0.2 * np.ones(1))
         self._actor = Actor(self._n_actions, self._upper_bound)
         self._critic = Critic(self._n_actions)
         self._target_actor = Actor(self._n_actions, self._upper_bound)
         self._target_critic = Critic(self._n_actions)
+
+        self._actor.to(self._device)
+        self._critic.to(self._device)
+        self._target_actor.to(self._device)
+        self._target_critic.to(self._device)
 
         weight_copy(self._target_actor, self._actor)
         weight_copy(self._target_critic, self._critic)
@@ -188,6 +195,9 @@ class Learner3:
         state_batch, action_batch, reward_batch, next_state_batch, _ = map(
             torch.Tensor, record
         )
+
+        for batch in (state_batch, action_batch, reward_batch, next_state_batch):
+            batch.to(self._device)
 
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.
