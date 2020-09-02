@@ -105,7 +105,7 @@ class Learner3:
         self._exp_replay = BigReplayBuffer(200000, (4, 480, 640), (8,))
 
         self._n_actions = 8
-        self._lower_bound = 0.0
+        self._lower_bound = -1.0
         self._upper_bound = 1.0
 
         self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -142,7 +142,7 @@ class Learner3:
             episodic_reward = 0
 
             for _ in range(self._max_steps):
-                torch_prev_state = torch.tensor(prev_state).unsqueeze(dim=0)
+                torch_prev_state = torch.tensor(prev_state, device=self._device).unsqueeze(dim=0)
 
                 action = self._policy(torch_prev_state, self._ou_noise)
                 state, reward, done = self._take_action(action)
@@ -180,24 +180,24 @@ class Learner3:
         sampled_actions = self._actor(state).squeeze()
         self._actor.train()
 
-        noise = torch.from_numpy(noise_object())
+        noise = torch.from_numpy(noise_object()).to(self._device)
         # Adding noise to action
         sampled_actions = sampled_actions + noise
 
         # We make sure action is within bounds
         legal_action = sampled_actions.clamp(self._lower_bound, self._upper_bound)
 
-        return legal_action.detach().numpy()
+        return legal_action.detach().to('cpu').numpy()
 
     def _learn(self):
+        def to_tensor(arr):
+            return torch.from_numpy(arr).float().to(self._device)
+
         record = self._exp_replay.sample(self._batch_size)
         # Convert to tensors
         state_batch, action_batch, reward_batch, next_state_batch, _ = map(
-            torch.Tensor, record
+            to_tensor, record
         )
-
-        for batch in (state_batch, action_batch, reward_batch, next_state_batch):
-            batch.to(self._device)
 
         # Training and updating Actor & Critic networks.
         # See Pseudo Code.

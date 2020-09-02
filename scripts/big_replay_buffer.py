@@ -10,7 +10,7 @@ class BigReplayBuffer():
         assert(type(obs_size) == tuple)
         assert(type(action_size) == tuple)
 
-        self._filename = "/tmp/{}.hdf5".format(str(uuid.uuid4()))
+        self._filename = "/net/scratch/people/plglubiluk/{}.hdf5".format(str(uuid.uuid4()))
         self._f = h5py.File(self._filename, "w")
 
         self._obs_t = self._f.create_dataset("obs_t", (size,) + obs_size, dtype='i')
