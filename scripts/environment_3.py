@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 import trajectory_msgs.msg
 import gazebo_msgs.msg

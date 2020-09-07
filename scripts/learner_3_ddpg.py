@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import json
+import uuid
+
 import cembra.srv
 import matplotlib.pyplot as plt
 import rospy
@@ -131,11 +134,13 @@ class Learner3:
         self._gamma = 0.99
         self._tau = 0.005
         self._batch_size = 64
-        self._max_steps = 1000
+        self._max_steps = 500
 
     def start(self):
         ep_reward_history = []
         avg_reward_history = []
+
+        json_file = "data/trainings/{}.json".format(str(uuid.uuid4()))
 
         for ep in range(self._total_episodes):
             prev_state = self._reset_env()
@@ -166,6 +171,14 @@ class Learner3:
             avg_reward = np.mean(ep_reward_history[-40:])
             print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
             avg_reward_history.append(avg_reward)
+
+            training_data = {
+                'avg_reward': avg_reward,
+                'avg_reward_history': avg_reward_history
+                }
+
+            with open(json_file, 'w') as f:
+                json.dump(training_data, f)
 
         # Plotting graph
         # Episodes versus Avg. Rewards
