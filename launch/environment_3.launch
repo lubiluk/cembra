@@ -4,12 +4,16 @@
 
   <arg name="environment" default="false"/>
   <arg name="learner" default="false"/>
+  <arg name="gui" default="true"/>
+  <arg name="paused" default="false"/>
 
   <arg name="robot_name" default="$(optenv ROBOT_NAME hsrb)" />
-  <include file="$(find hsrb_gazebo_bringup)/launch/hsrb_empty_world.launch" pass_all_args="true" >
+  <include file="$(find hsrb_gazebo_bringup)/launch/hsrb_empty_world.launch" >
     <arg name="world_name" value="$(find cembra)/worlds/environment_3.world" />
     <!-- <arg name="robot_pos" value="[Initial pose of the robot]" /> -->
     <arg name="use_laser_odom" value="false" />
+    <arg name="paused" value="$(arg paused)" />
+    <arg name="gui" value="$(arg gui)" />
   </include>
 
   <node name="environment" pkg="cembra" type="environment_3.py" if="$(arg environment)"></node>

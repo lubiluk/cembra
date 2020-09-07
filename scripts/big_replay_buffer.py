@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import uuid
 import random
-from pathlib2 import Path
+import os.path
 
 class BigReplayBuffer():
     """Replay buffer that keeps data on disk so it can get big"""
@@ -11,13 +11,13 @@ class BigReplayBuffer():
         assert(type(obs_size) == tuple)
         assert(type(action_size) == tuple)
 
-        scratch = Path('/net/scratch/people/plglubiluk')
-        tmp = Path('/tmp')
+        scratch = '/net/scratch/people/plglubiluk'
+        tmp = '/tmp'
 
-        dir = scratch if scratch.exists() else tmp
+        data_dir = scratch if os.path.exists(scratch) else tmp
 
         self._filename = "{}.hdf5".format(str(uuid.uuid4()))
-        self._f = h5py.File(dir / self._filename, "w")
+        self._f = h5py.File(data_dir + '/' + self._filename, "w")
 
         self._obs_t = self._f.create_dataset("obs_t", (size,) + obs_size, dtype='i')
         self._action = self._f.create_dataset("action", (size,) + action_size, dtype='f')
