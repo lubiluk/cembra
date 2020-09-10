@@ -135,13 +135,16 @@ class Learner3:
         self._gamma = 0.99
         self._tau = 0.005
         self._batch_size = 64
-        self._max_steps = 500
+        self._max_steps = 400
 
     def start(self):
         ep_reward_history = []
         avg_reward_history = []
 
-        json_file = "data/trainings/{}.json".format(str(uuid.uuid4()))
+        id = str(uuid.uuid4())
+        json_file = "data/trainings/{}.json".format(id)
+        actor_file = "data/trainings/{}_actor.pt".format(id)
+        critic_file = "data/trainings/{}_critic.pt".format(id)
 
         for ep in range(self._total_episodes):
             prev_state = self._reset_env()
@@ -180,6 +183,9 @@ class Learner3:
 
             with open(json_file, 'w') as f:
                 json.dump(training_data, f)
+
+            torch.save(self._actor.state_dict(), actor_file)
+            torch.save(self._critic.state_dict(), critic_file)
 
         # Plotting graph
         # Episodes versus Avg. Rewards
