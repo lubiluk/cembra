@@ -73,6 +73,9 @@ class Environment3:
 
         self._collision_registered = False
 
+        if not self._image:
+            self._image = robot_utils.get_image()
+
         return self._image
 
     def _handle_action(self, msg):
@@ -95,6 +98,9 @@ class Environment3:
 
         if is_done:
             self._send_velocities([0, 0, 0, 0, 0, 0, 0, 0])
+
+        if not self._image:
+            self._image = robot_utils.get_image()
 
         return (self._image, reward, is_done)
 

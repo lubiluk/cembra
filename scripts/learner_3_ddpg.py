@@ -16,6 +16,7 @@ from frame_buffer import FrameBuffer
 from observation_processor import ObservationProcessor
 from ou_action_noise import OUActionNoise
 from torch_utils import *
+from os.path import expanduser
 
 RESET_SERVICE = '/cembra/reset'
 ACTION_SERVICE = '/cembra/action'
@@ -142,9 +143,9 @@ class Learner3:
         avg_reward_history = []
 
         id = str(uuid.uuid4())
-        json_file = "data/trainings/{}.json".format(id)
-        actor_file = "data/trainings/{}_actor.pt".format(id)
-        critic_file = "data/trainings/{}_critic.pt".format(id)
+        json_file = expanduser("~/data/trainings/{}.json".format(id))
+        actor_file = expanduser("~/data/trainings/{}_actor.pt".format(id))
+        critic_file = expanduser("~/data/trainings/{}_critic.pt".format(id))
 
         for ep in range(self._total_episodes):
             prev_state = self._reset_env()
