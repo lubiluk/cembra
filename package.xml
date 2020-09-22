@@ -63,6 +63,8 @@
   <depend>sensor_msgs</depend>
   <depend>gezebo_ros</depend>
   <depend>gazebo_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>control_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

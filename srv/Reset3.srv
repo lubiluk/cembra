@@ -1,2 +1,5 @@
 ---
-sensor_msgs/Image state
+sensor_msgs/Image image
+sensor_msgs/JointState joint_state
+control_msgs/JointTrajectoryControllerState base_state
+nav_msgs/Odometry odom

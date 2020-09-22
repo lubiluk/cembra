@@ -8,8 +8,13 @@ import simulator_utils
 import robot_utils
 import sensor_msgs.msg
 import control_msgs.msg
+import nav_msgs.msg
 
 TIME_STEP = 0.1
+CAMERA_TOPIC = '/hsrb/head_rgbd_sensor/rgb/image_rect_color'
+BASE_STATE_TOPIC = '/hsrb/omni_base_controller/state'
+JOINT_STATE_TOPIC = '/hsrb/joint_states'
+ODOM_TOPIC = '/hsrb/odom'
 
 class Environment3:
     """
@@ -22,8 +27,11 @@ class Environment3:
         rospy.loginfo("Environment 3")
 
         self._collision_registered = False
-        self._image = None
         self._joint_states = {}
+        self._image_msg = None
+        self._joint_state_msg = None
+        self._base_state_msg = None
+        self._odom_msg = None
 
     def start(self):
         self._arm_pub = rospy.Publisher(
@@ -36,14 +44,18 @@ class Environment3:
             '/cube_contact_sensor_state', 
             gazebo_msgs.msg.ContactsState, self._handle_collision)
         self._image_sub = rospy.Subscriber(
-            '/hsrb/head_rgbd_sensor/rgb/image_rect_color', 
+            CAMERA_TOPIC, 
             sensor_msgs.msg.Image, self._handle_image)
         self._joint_state_sub = rospy.Subscriber(
-            '/hsrb/joint_states', 
+            JOINT_STATE_TOPIC, 
             sensor_msgs.msg.JointState, self._handle_joint_state)
         self._base_state_sub = rospy.Subscriber(
-            '/hsrb/omni_base_controller/state', 
+            BASE_STATE_TOPIC, 
             control_msgs.msg.JointTrajectoryControllerState, self._handle_base_state)
+        self._odom_sub = rospy.Subscriber(
+            ODOM_TOPIC,
+            nav_msgs.msg.Odometry, self._handle_odometry
+        )
 
         rospy.loginfo("Waiting for controllers to attach")
         # wait to establish connection between the controller
@@ -59,6 +71,15 @@ class Environment3:
         simulator_utils.pause()
         simulator_utils.go_turbo()
 
+        self._handle_image(
+            rospy.wait_for_message(CAMERA_TOPIC, sensor_msgs.msg.Image))
+        self._handle_joint_state(
+            rospy.wait_for_message(JOINT_STATE_TOPIC, sensor_msgs.msg.JointState))
+        self._handle_base_state(
+            rospy.wait_for_message(BASE_STATE_TOPIC, control_msgs.msg.JointTrajectoryControllerState))
+        self._handle_odometry(
+            rospy.wait_for_message(ODOM_TOPIC, nav_msgs.msg.Odometry))
+
         rospy.loginfo("Environment ready")
 
         rospy.spin()
@@ -73,10 +94,7 @@ class Environment3:
 
         self._collision_registered = False
 
-        if not self._image:
-            self._image = robot_utils.get_image()
-
-        return self._image
+        return (self._image_msg, self._joint_state_msg, self._base_state_msg, self._odom_msg)
 
     def _handle_action(self, msg):
         """
@@ -99,10 +117,7 @@ class Environment3:
         if is_done:
             self._send_velocities([0, 0, 0, 0, 0, 0, 0, 0])
 
-        if not self._image:
-            self._image = robot_utils.get_image()
-
-        return (self._image, reward, is_done)
+        return (self._image_msg, reward, is_done)
 
     def _send_velocities(self, velocities):
         assert(len(velocities) == 8)
@@ -151,15 +166,22 @@ class Environment3:
                 self._collision_registered = True
 
     def _handle_image(self, msg):
-        self._image = msg
+        self._image_msg = msg
 
     def _handle_joint_state(self, msg):
+        self._joint_state_msg = msg
+
         for i in range(len(msg.name)):
             self._joint_states[msg.name[i]] = msg.position[i]
 
     def _handle_base_state(self, msg):
+        self._base_state_msg = msg
+
         for i in range(len(msg.joint_names)):
             self._joint_states[msg.joint_names[i]] = msg.actual.positions[i]
+
+    def _handle_odometry(self, msg):
+        self._odom_msg = msg
 
 def run():
     env = Environment3()

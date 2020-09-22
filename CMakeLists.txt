@@ -21,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   sensor_msgs
   gazebo_msgs
+  nav_msgs
+  control_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -88,6 +90,8 @@ generate_messages(
  tmc_msgs
  sensor_msgs
  gazebo_msgs
+ nav_msgs
+ control_msgs
 )
 
 ################################################
