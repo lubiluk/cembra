@@ -11,12 +11,15 @@ import control_msgs.msg
 import nav_msgs.msg
 import tf2_ros
 import geometry_msgs.msg
+import tf2_geometry_msgs
+import tf
 
 TIME_STEP = 0.1
 MODEL_STATE_TOPIC = '/gazebo/model_states'
 BASE_STATE_TOPIC = '/hsrb/omni_base_controller/state'
 JOINT_STATE_TOPIC = '/hsrb/joint_states'
 ODOM_TOPIC = '/hsrb/odom'
+CAMERA_REF_FRAME = 'head_rgbd_sensor_rgb_frame'
 
 class Environment4:
     """
@@ -72,11 +75,13 @@ class Environment4:
         self.action_srv = rospy.Service(
             '/cembra/action', cembra.srv.Action4, self._handle_action)
         
-        self._tf_buffer = tf2_ros.Buffer()
-        self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
-
         simulator_utils.resume()
         simulator_utils.go_turbo()
+
+        # TF listener for retrieving object pose relatively to camera frame
+        # self._tf_buffer = tf2_ros.Buffer()
+        # self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
+        # self._tf_buffer.lookup_transform("base_footprint", CAMERA_REF_FRAME, rospy.Time.now(), rospy.Duration(4.0))
 
         self._handle_model_state(
             rospy.wait_for_message(MODEL_STATE_TOPIC, gazebo_msgs.msg.ModelStates))
@@ -172,15 +177,6 @@ class Environment4:
             if s.collision2_name.startswith('hsrb::hand') or s.collision2_name.startswith('hsrb::wrist'):
                 self._collision_registered = True
 
-    def _handle_model_state(self, msg):
-        pose = msg.pose[msg.name.index('wood_cube_5cm')]
-        # we need model pose in camera coordinate frame
-        pose_stamped = geometry_msgs.msg.PoseStamped()
-        pose_stamped.pose = pose
-        pose_stamped.header.frame_id = 'head_rgbd_sensor_rgb_frame'
-        pose_stamped.header.stamp = rospy.Time(0)
-        pose = self._tf_listener.transform(pose_stamped, '')
-
     def _handle_joint_state(self, msg):
         self._joint_state_msg = msg
 
@@ -195,6 +191,40 @@ class Environment4:
 
     def _handle_odometry(self, msg):
         self._odom_msg = msg
+
+    def _handle_model_state(self, msg):
+        cube_pose = msg.pose[msg.name.index('wood_cube_5cm')]
+        hsrb_pose = msg.pose[msg.name.index('hsrb')]
+        # we need model pose in camera coordinate frame
+        pose_stamped = geometry_msgs.msg.PoseStamped()
+        pose_stamped.pose.position.x = cube_pose.position.x - hsrb_pose.position.x
+        pose_stamped.pose.position.y = cube_pose.position.y - hsrb_pose.position.y
+        pose_stamped.pose.position.z = cube_pose.position.z - hsrb_pose.position.z
+
+        q1_inv = [0.0, 0.0, 0.0, 0.0]
+        q1_inv[0] = hsrb_pose.orientation.x
+        q1_inv[1] = hsrb_pose.orientation.y
+        q1_inv[2] = hsrb_pose.orientation.z
+        q1_inv[3] = -hsrb_pose.orientation.w # Negate for inverse
+
+        q2 = [0.0, 0.0, 0.0, 0.0]
+        q2[0] = cube_pose.orientation.x
+        q2[1] = cube_pose.orientation.y
+        q2[2] = cube_pose.orientation.z
+        q2[3] = cube_pose.orientation.w
+
+        qr = tf.transformations.quaternion_multiply(q2, q1_inv)
+
+        pose_stamped.pose.orientation.x = qr[0]
+        pose_stamped.pose.orientation.y = qr[1]
+        pose_stamped.pose.orientation.z = qr[2]
+        pose_stamped.pose.orientation.w = qr[3]
+
+        # pose_stamped.header.frame_id = 'base_footprint'
+        # pose_stamped.header.stamp = rospy.Time(0)
+        # cam_pose = self._tf_buffer.transform(pose_stamped, CAMERA_REF_FRAME)
+
+        self._object_pose = pose_stamped.pose
 
 def run():
     env = Environment4()

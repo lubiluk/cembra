@@ -122,7 +122,7 @@
       <pose frame=''>0.7 0 0 0 0 0</pose>
     </model>
 
-    <plugin name="tf_broadcast" filename="libtf_broadcast_plugin.so"/>
+    <!-- <plugin name="tf_broadcast" filename="libtf_broadcast_plugin.so"/> -->
 
   </world>
 </sdf>
