@@ -33,9 +33,11 @@ class Actor(nn.Module):
 
         self._fc1 = nn.Linear(INPUT_SIZE, 1024)
         self._norm1 = nn.LayerNorm(1024)
-        self._fc2 = nn.Linear(1024, 512)
-        self._norm2 = nn.LayerNorm(512)
-        self._fc3 = nn.Linear(512, num_actions)
+        self._fc2 = nn.Linear(1024, 1024)
+        self._norm2 = nn.LayerNorm(1024)
+        self._fc3 = nn.Linear(1024, 512)
+        self._norm3 = nn.LayerNorm(512)
+        self._fc4 = nn.Linear(512, num_actions)
 
         self._fc3.weight.data.uniform_(-0.003, 0.003)
         self._fc3.bias.data.uniform_(-0.003, 0.003)
@@ -44,7 +46,8 @@ class Actor(nn.Module):
         x = inputs
         x = self._norm1(F.relu(self._fc1(x)))
         x = self._norm2(F.relu(self._fc2(x)))
-        x = torch.tanh(self._fc3(x))
+        x = self._norm3(F.relu(self._fc3(x)))
+        x = torch.tanh(self._fc4(x))
         x = x * self._upper_bound
 
         return x
@@ -56,8 +59,10 @@ class Critic(nn.Module):
 
         self._state_fc1 = nn.Linear(INPUT_SIZE, 1024)
         self._state_norm1 = nn.LayerNorm(1024)
-        self._state_fc2 = nn.Linear(1024, 512)
-        self._state_norm2 = nn.LayerNorm(512)
+        self._state_fc2 = nn.Linear(1024, 1024)
+        self._state_norm2 = nn.LayerNorm(1024)
+        self._state_fc3 = nn.Linear(1024, 512)
+        self._state_norm3 = nn.LayerNorm(512)
 
         self._action_fc1 = nn.Linear(num_actions, 32)
         self._action_norm1 = nn.LayerNorm(32)
@@ -72,6 +77,7 @@ class Critic(nn.Module):
         mx = inputs[0]
         mx = self._state_norm1(F.relu(self._state_fc1(mx)))
         mx = self._state_norm2(F.relu(self._state_fc2(mx)))
+        mx = self._state_norm3(F.relu(self._state_fc3(mx)))
 
         ax = inputs[1]
         ax = self._action_norm1(F.relu(self._action_fc1(ax)))
@@ -123,7 +129,7 @@ class Learner4:
             self._critic.parameters(), lr=0.002)
         self._actor_optimizer = optim.Adam(self._actor.parameters(), lr=0.001)
 
-        self._total_episodes = 200
+        self._total_episodes = 1000
         self._gamma = 0.99
         self._tau = 0.005
         self._batch_size = 64
