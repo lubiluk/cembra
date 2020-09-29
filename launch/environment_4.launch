@@ -17,5 +17,5 @@
   </include>
 
   <node name="environment" pkg="cembra" type="environment_4.py" if="$(arg environment)" output="screen"></node>
-  <node name="learner" pkg="cembra" type="learner_4_ddpg.py" if="$(arg learner)" output="screen"></node>
+  <node name="learner" pkg="cembra" type="learner_4.py" if="$(arg learner)" output="screen"></node>
 </launch>

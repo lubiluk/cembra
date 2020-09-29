@@ -34,6 +34,7 @@ class Environment4:
         rospy.loginfo("Environment 4")
 
         self._collision_registered = False
+        self._crash_registered = False
         self._joint_states = {}
         self._object_pose = None
         self._joint_state_msg = None
@@ -45,8 +46,8 @@ class Environment4:
             '/hsrb/arm_trajectory_controller/command', 
             trajectory_msgs.msg.JointTrajectory, queue_size=1)
         self._base_pub = rospy.Publisher(
-            '/hsrb/omni_base_controller/command', 
-            trajectory_msgs.msg.JointTrajectory, queue_size=1)
+            '/hsrb/command_velocity', 
+            geometry_msgs.msg.Twist, queue_size=1)
         self._collision_sub = rospy.Subscriber(
             '/cube_contact_sensor_state', 
             gazebo_msgs.msg.ContactsState, self._handle_collision)
@@ -105,6 +106,7 @@ class Environment4:
         simulator_utils.pause()
 
         self._collision_registered = False
+        self._crash_registered = False
 
         return (self._object_pose, self._joint_state_msg, self._base_state_msg, self._odom_msg)
 
@@ -123,8 +125,14 @@ class Environment4:
         d = simulator_utils.get_link_distance('hsrb::wrist_ft_sensor_frame', 'wood_cube_5cm::link')
         simulator_utils.pause()
 
-        reward = 100.0 if self._collision_registered else -d
-        is_done = self._collision_registered
+        reward = -d
+
+        if self._crash_registered:
+            reward -= 500
+        elif self._collision_registered:
+            reward = 100
+
+        is_done = self._collision_registered or self._crash_registered
 
         if is_done:
             rospy.loginfo("Done!")
@@ -160,24 +168,20 @@ class Environment4:
         self._arm_pub.publish(traj)
 
         # Base velocity
-        traj = trajectory_msgs.msg.JointTrajectory()
-        traj.joint_names = ['odom_x', 'odom_y', 'odom_t']
-        p = trajectory_msgs.msg.JointTrajectoryPoint()
-        p.positions = [
-            self._joint_states['odom_x'] + velocities[5] * TIME_STEP,
-            self._joint_states['odom_y'] + velocities[6] * TIME_STEP,
-            self._joint_states['odom_t'] + velocities[7] * TIME_STEP,
-        ]
-        p.velocities = [0, 0, 0]
-        p.time_from_start = rospy.Time(TIME_STEP)
-        traj.points = [p]
+        tw = geometry_msgs.msg.Twist()
+        tw.linear.x = velocities[5]
+        tw.linear.y = velocities[6]
+        tw.linear.z = velocities[7]
 
-        self._base_pub.publish(traj)
+        self._base_pub.publish(tw)
 
     def _handle_collision(self, msg):
         for s in msg.states:
             if s.collision2_name.startswith('hsrb::hand') or s.collision2_name.startswith('hsrb::wrist'):
                 self._collision_registered = True
+
+            if s.collision2_name.startswith('hsrb::base'):
+                self._crash_registered = True
 
     def _handle_joint_state(self, msg):
         self._joint_state_msg = msg
@@ -195,6 +199,9 @@ class Environment4:
         self._odom_msg = msg
 
     def _handle_model_state(self, msg):
+        if 'hsrb' not in msg.name:
+            return
+
         cube_pose = msg.pose[msg.name.index('wood_cube_5cm')]
         hsrb_pose = msg.pose[msg.name.index('hsrb')]
         # we need model pose in camera coordinate frame

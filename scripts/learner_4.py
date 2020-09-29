@@ -39,8 +39,8 @@ class Actor(nn.Module):
         self._norm3 = nn.LayerNorm(512)
         self._fc4 = nn.Linear(512, num_actions)
 
-        self._fc3.weight.data.uniform_(-0.003, 0.003)
-        self._fc3.bias.data.uniform_(-0.003, 0.003)
+        self._fc4.weight.data.uniform_(-0.003, 0.003)
+        self._fc4.bias.data.uniform_(-0.003, 0.003)
 
     def forward(self, inputs):
         x = inputs
@@ -72,6 +72,9 @@ class Critic(nn.Module):
         self._out_fc2 = nn.Linear(1024, 512)
         self._out_norm2 = nn.LayerNorm(512)
         self._out_fc3 = nn.Linear(512, 1)
+
+        self._out_fc3.weight.data.uniform_(-0.003, 0.003)
+        self._out_fc3.bias.data.uniform_(-0.003, 0.003)
 
     def forward(self, inputs):
         mx = inputs[0]
@@ -259,6 +262,7 @@ class Learner4:
         return state
 
     def _take_action(self, velocities):
+        # velocities = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         response = self.action_proxy(velocities)
 
         state = self._pose_msg_2_vec(response.object_pose) + \
