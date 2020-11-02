@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <include file="$(find cembra)/launch/simulator.launch"></include>
-    <include file="$(find cembra)/launch/moveit.launch"></include>
-    <node name="arm_filter" pkg="cembra" type="arm_filter"></node>
-    <node name="base_filter" pkg="cembra" type="base_filter"></node>
-</launch>

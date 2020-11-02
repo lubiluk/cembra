@@ -1,5 +1,0 @@
----
-geometry_msgs/Pose object_pose
-sensor_msgs/JointState joint_state
-control_msgs/JointTrajectoryControllerState base_state
-nav_msgs/Odometry odom

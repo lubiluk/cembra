@@ -1,6 +1,0 @@
-# 5 for arm, 3 for base
-int32[8] action
----
-sensor_msgs/Image state
-float32 reward
-int32 is_done
