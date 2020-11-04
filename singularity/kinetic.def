@@ -1,0 +1,71 @@
+Bootstrap: docker
+From: ubuntu:16.04
+
+%post
+  export DEBIAN_FRONTEND=noninteractive
+  
+  cd /tmp
+
+  apt update
+  apt install -y wget lsb-release net-tools apt-transport-https mesa-utils strace lua5.2 lua-filesystem lua-posix libunwind-dev libunwind8 xvfb apt-file apt-transport-https
+
+  echo "deb https://hsr-user:jD3k4G2e@packages.hsr.io/ros/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/tmc.list
+  echo "deb https://hsr-user:jD3k4G2e@packages.hsr.io/tmc/ubuntu `lsb_release -cs` multiverse main" >> /etc/apt/sources.list.d/tmc.list
+  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list
+  wget https://hsr-user:jD3k4G2e@packages.hsr.io/tmc.key -O - | apt-key add -
+  wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - 
+  echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
+  apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+
+  apt update
+  apt install -y ros-kinetic-desktop-full
+  apt install -y python-rosinstall python-rosinstall-generator python-wstool build-essential
+  apt install -y ros-kinetic-tmc-desktop-full
+  apt install -y ros-kinetic-hsrb-moveit
+  apt install -y python-catkin-tools
+  apt install -y vim
+  apt install -y python-pip
+  apt install -y ros-kinetic-ros-numpy
+  apt install -y python-pygame
+
+  pip install --upgrade pip
+  pip install future h5py pynput torch tqdm numpy pylint matplotlib Pillow scipy pandas sympy gym
+  wget https://go.microsoft.com/fwlink/?LinkID=760868 -O code.deb
+  apt install -y ./code.deb
+
+  rosdep init
+  rosdep update
+
+  apt clean -y
+
+  mkdir /net
+  chmod -R 777 /net
+
+  mv /opt/ros/kinetic/bin/rviz /opt/ros/kinetic/bin/rviz.bin
+  echo '#!/bin/bash
+export LD_LIBRARY_PATH=/opt/ros/kinetic/lib:/opt/ros/kinetic/lib/x86_64-linux-gnu:/net/software/local/mesa/19.3.1/lib64:/net/software/local/llvm/8.0.0/lib
+rviz.bin $&' > /opt/ros/kinetic/bin/rviz
+  chmod +x /opt/ros/kinetic/bin/rviz
+
+%runscript
+  eval "$@"
+
+%environment
+  export LC_ALL=C
+  . /opt/ros/kinetic/setup.sh
+  export ROS_HOME=$HOME/.ros
+  export ROS_IP=$(LANG==C /sbin/ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*'| grep -Eo '([0-9]*\.){3}[0-9]*')
+  export GAZEBO_MASTER_URI='http://localhost:11345'
+  export TMP=$TMPDIR
+  export LD_LIBRARY_PATH=/net/software/local/mesa/17.3.4/lib/:/net/software/local/llvm/4.0.0/lib:$LD_LIBRARY_PATH
+  alias sim_mode='export ROS_MASTER_URI=http://$ROS_IP:11311 export PS1="\ [\033[44;1;37m]<local>[\033[0m]\w$ "'
+  alias hsrb_mode='export ROS_MASTER_URI=http://hsrb.local:11311 export PS1="\ [\033[41;1;37m]<hsrb>[\033[0m]\w$ "'
+  echo "To run GAZEBO in client-server configuration please use as GAZEBO_MASTER_URI adress http://$ROS_IP:11345"
+
+%labels
+  Author: Maciej Czuchry [m.czuchry@cyfronet.pl], Paweł Gajewski [pgajewski@agh.edu.pl]
+  Version 1.2
+
+%help
+  This is a container for running HSRB robot simulation
+  
