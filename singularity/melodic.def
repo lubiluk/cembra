@@ -9,17 +9,16 @@ From: ubuntu:18.04
   apt update
   apt install -y wget lsb-release net-tools apt-transport-https mesa-utils strace lua5.2 lua-filesystem lua-posix libunwind-dev libunwind8 xvfb apt-file apt-transport-https gnupg
 
+  echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
+  apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+  
   echo "deb https://packages.hsr.io/ros/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/tmc.list
   echo "deb https://packages.hsr.io/tmc/ubuntu `lsb_release -cs` multiverse main" >> /etc/apt/sources.list.d/tmc.list
-  echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list
   echo "deb https://apache.bintray.com/couchdb-deb `lsb_release -cs` main" > /etc/apt/sources.list.d/couchdb.list
   wget https://hsr-user:jD3k4G2e@packages.hsr.io/tmc.key -O - | apt-key add -
-  wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add - 
   wget https://couchdb.apache.org/repo/bintray-pubkey.asc -O - | apt-key add -
   mkdir -p /etc/apt/auth.conf.d
   echo -e "machine packages.hsr.io\nlogin hsr-user\npassword jD3k4G2e" > /etc/apt/auth.conf.d/auth.conf
-  echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
-  apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
   apt update
   apt install -y ros-melodic-desktop-full
