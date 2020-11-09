@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "teleop.py",
+            "program": "ddpg_her_0.py",
             "console": "integratedTerminal"
         }
     ]

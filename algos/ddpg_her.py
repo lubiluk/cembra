@@ -6,6 +6,7 @@ import gym
 import time
 import core
 from logx import EpochLogger
+import h5py
 
 
 class ReplayBuffer:
@@ -56,7 +57,8 @@ class ReplayBuffer:
         idxs = np.arange(ep_start_ptr, min(ep_start_ptr + ep_len, self.size))
 
         if len(idxs) < ep_len:
-            idxs = np.concatenate([idxs, np.arange((ep_start_ptr + ep_len) % self.size)])
+            idxs = np.concatenate(
+                [idxs, np.arange((ep_start_ptr + ep_len) % self.size)])
 
         return dict(obs=self.obs_buf[idxs],
                     obs2=self.obs2_buf[idxs],
@@ -72,8 +74,8 @@ def ddpg_her(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
              steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99,
              polyak=0.995, pi_lr=1e-3, q_lr=1e-3, batch_size=100, start_steps=10000,
              update_after=1000, update_every=50, act_noise=0.1, num_test_episodes=10,
-             max_ep_len=1000, logger_kwargs=dict(), save_freq=1, 
-             num_additional_goals=1, goal_selection_strategy='final'):
+             max_ep_len=1000, logger_kwargs=dict(), save_freq=1,
+             num_additional_goals=1, goal_selection_strategy='final', demos=[]):
     """
     Deep Deterministic Policy Gradient (DDPG) with Hindsight Experience Repley (HER)
 
@@ -312,11 +314,39 @@ def ddpg_her(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 elif selection_strategy == 'episode':
                     sel_idx = np.random.choice(np.arange(ep_end))
                 else:
-                    raise ValueError("Unsupported selection_strategy: {}".format(selection_strategy))
+                    raise ValueError(
+                        "Unsupported selection_strategy: {}".format(selection_strategy))
 
                 sel_agoal = ep['agoal'][sel_idx]
                 rew = env.compute_reward(agoal, sel_agoal, info)
-                replay_buffer.store(obs, act, rew, obs2, False, sel_agoal, agoal, info)
+                replay_buffer.store(obs, act, rew, obs2,
+                                    False, sel_agoal, agoal, info)
+
+    def load_demo_experience(demos, replay_buffer, num_additional_goals, goal_selection_strategy='final'):
+        for df in demos:
+            with h5py.File(df, "r") as f:
+                obs = f['obs']
+                obs2 = f['obs2']
+                act = f['act']
+                rew = f['rew']
+                done = f['done']
+                dgoal = f['dgoal']
+                agoal = f['agoal']
+                ep_len = len(obs)
+
+                ep_start_ptr = replay_buffer.ptr
+
+                for i in range(ep_len):
+                    replay_buffer.store(
+                        obs[i], act[i], rew[i], obs2[i], done[i], dgoal[i], agoal[i], {})
+
+                generate_additional_experience(env, ep_start_ptr=ep_start_ptr, ep_len=ep_len,
+                                               replay_buffer=replay_buffer, num=num_additional_goals,
+                                               selection_strategy=goal_selection_strategy)
+
+    # Preload experience from demos
+    load_demo_experience(
+        demos, replay_buffer, num_additional_goals=num_additional_goals, goal_selection_strategy='final')
 
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
@@ -377,10 +407,12 @@ def ddpg_her(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 batch = replay_buffer.sample_batch(batch_size)
                 og_batch = dict(
                     obs=torch.as_tensor(
-                        np.concatenate([batch['obs'], batch['dgoal']], axis=-1), 
+                        np.concatenate(
+                            [batch['obs'], batch['dgoal']], axis=-1),
                         dtype=torch.float32),
                     obs2=torch.as_tensor(
-                        np.concatenate([batch['obs2'], batch['dgoal']], axis=-1),
+                        np.concatenate(
+                            [batch['obs2'], batch['dgoal']], axis=-1),
                         dtype=torch.float32),
                     act=torch.as_tensor(batch['act'], dtype=torch.float32),
                     rew=torch.as_tensor(batch['rew'], dtype=torch.float32),
