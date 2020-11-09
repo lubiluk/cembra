@@ -49,6 +49,8 @@ export LD_LIBRARY_PATH=/opt/ros/melodic/lib:/opt/ros/melodic/lib/x86_64-linux-gn
 rviz.bin $&' > /opt/ros/melodic/bin/rviz
   chmod +x /opt/ros/melodic/bin/rviz
 
+  mv /opt/ros/melodic/lib/libhsrb_grasp_hack.so /opt/ros/melodic/lib/libhsrb_grasp_hack.so.bkp
+
 %runscript
   eval "$@"
 
