@@ -1,1 +1,3 @@
-from ddpg_her import ddpg_her
+from .sac.sac import SAC
+
+from .logx import Logger, EpochLogger

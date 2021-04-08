@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import os.path as osp, time, atexit, os
 import warnings
-from serialization_utils import convert_json
+from .serialization_utils import convert_json
 import sys
 
 def proc_id():
@@ -233,7 +233,7 @@ class Logger:
             print("-"*n_slashes)
             for key in self.log_headers:
                 val = self.log_current_row.get(key, "")
-                valstr = "%8.3g"%val if hasattr(val, "__float__") else val
+                valstr = "%.3f"%val if isinstance(val, np.floating) or isinstance(val, float) else val
                 print(fmt%(key, valstr))
                 vals.append(val)
             print("-"*n_slashes)
@@ -309,15 +309,18 @@ class EpochLogger(Logger, object):
         if val is not None:
             super(EpochLogger, self).log_tabular(key,val)
         else:
+            if key not in self.epoch_dict:
+                return
+
             v = self.epoch_dict[key]
             vals = np.concatenate(v) if isinstance(v[0], np.ndarray) and len(v[0].shape)>0 else v
             stats = mpi_statistics_scalar(vals, with_min_and_max=with_min_and_max)
-            super(EpochLogger, self).log_tabular(key if average_only else 'Average' + key, stats[0])
+            super(EpochLogger, self).log_tabular(key if average_only else 'avg ' + key, stats[0])
             if not(average_only):
-                super(EpochLogger, self).log_tabular('Std'+key, stats[1])
+                super(EpochLogger, self).log_tabular('std '+key, stats[1])
             if with_min_and_max:
-                super(EpochLogger, self).log_tabular('Max'+key, stats[3])
-                super(EpochLogger, self).log_tabular('Min'+key, stats[2])
+                super(EpochLogger, self).log_tabular('max '+key, stats[3])
+                super(EpochLogger, self).log_tabular('min '+key, stats[2])
         self.epoch_dict[key] = []
 
     def get_stats(self, key):
